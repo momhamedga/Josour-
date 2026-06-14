@@ -18,8 +18,10 @@ interface PortalPageProps {
 }
 
 export default async function ClientPortalPage({ params }: PortalPageProps) {
+  // 1. فك الـ Params بأمان
   const { lang } = await params;
 
+  // 2. التحقق من الكوكيز
   const cookieStore = await cookies();
   const userEmail = cookieStore.get('user_email')?.value;
 
@@ -27,8 +29,8 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     redirect(`/${lang}/portal/login`);
   }
 
-  // 🛡️ تأمين قاطع: لو دخل مسار عشوائي، السيستم يفرش اللغة العربية فوراً كـ Fallback لحماية السيرفر
-  const dict = siteContent[lang] || siteContent.ar || {};
+  // 3. تأمين القاموس والمحتوى من الانهيار التام
+  const dict = siteContent?.[lang] || siteContent?.ar || {};
   const isRtl = lang === 'ar';
 
   const translations = {
@@ -148,13 +150,20 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     ` as any[];
 
     if (rows.length > 0) {
-      const blobToken = await issueSignedToken({ operations: ['get'] });
+      // جلب الـ token لملفات Vercel Blob الموقعة
+      let blobToken = '';
+      try {
+        blobToken = await issueSignedToken({ operations: ['get'] });
+      } catch (tokenErr) {
+        console.error('Failed to issue blob token', tokenErr);
+      }
 
       rawApplications = await Promise.all(
         rows.map(async (app) => {
           let updatedApp = { ...app };
 
-          if (app.issued_document_url && app.issued_document_url.includes('.private.blob.vercel-storage.com')) {
+          // 🛡️ حماية Try-Catch لإنشاء الروابط الموقعة لتجنب انهيار الصفحة بسبب داتا تالفة
+          if (blobToken && app.issued_document_url && app.issued_document_url.includes('.private.blob.vercel-storage.com')) {
             try {
               const finalUrlObj = new URL(app.issued_document_url);
               const finalPathname = finalUrlObj.pathname.substring(1);
@@ -167,15 +176,16 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
               });
               updatedApp.issued_document_url = signedFinalUrl;
             } catch (err) {
-              console.error('Failed to sign final doc url', err);
+              console.error('Failed to sign final doc url safely', err);
             }
           }
 
           if (!app.documents) app.documents = [];
 
+          // 🛡️ حماية تفصيلية لكل وثيقة على حدة لمنع أي ميموري كراش بداخل مصفوفة الداتابيز
           const securedDocuments = await Promise.all(
             app.documents.map(async (doc: any) => {
-              if (doc.file_url && doc.file_url.includes('.private.blob.vercel-storage.com')) {
+              if (blobToken && doc?.file_url && doc.file_url.includes('.private.blob.vercel-storage.com')) {
                 try {
                   const urlObj = new URL(doc.file_url);
                   const pathname = urlObj.pathname.substring(1);
@@ -189,6 +199,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
 
                   return { ...doc, file_url: presignedUrl };
                 } catch (tokenErr) {
+                  console.error('Safe bypass for document URL parsing', tokenErr);
                   return doc;
                 }
               }
@@ -202,6 +213,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     }
   } catch (err) {
     errorMsg = t.errorFetch;
+    console.error('Main db transaction failed', err);
   }
 
   const statusColors = {
@@ -218,8 +230,9 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     rejected: 'bg-rose-50 border-rose-200 text-rose-700',
   };
 
-  // 🛡️ تأمين متكامل: تفادي الانهيار التام عن طريق علامة الاستفهام الاختيارية لمنع قراءة خصائص من حقول undefined
-  const availableServices = (dict?.servicesSection?.items || [])
+  // 🛡️ تأمين متكامل ومقاوم للـ undefined لقراءة قائمة الخدمات من التكوينات
+  const servicesItems = dict?.servicesSection?.items || siteContent?.ar?.servicesSection?.items || [];
+  const availableServices = servicesItems
     .map((item: any) => ({
       id: item?.id || '',
       title: item?.title || '',
@@ -259,9 +272,9 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
       const nameEn = translation.en;
 
       const existingDoc = app.documents?.find((d: any) => 
-        d.document_name_ar === nameAr || 
+        d && (d.document_name_ar === nameAr || 
         d.document_name_en === nameEn ||
-        (d.id && String(d.id).includes(docKey))
+        (d.id && String(d.id).includes(docKey)))
       );
       
       if (existingDoc) return existingDoc;
@@ -286,11 +299,11 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
   const approvedLicenses = processedApplications.filter(a => a.status === 'approved').length;
   
   const pendingDocs = processedApplications.reduce((acc, app) => 
-    acc + (app.displayedDocs?.filter((d: any) => !d.file_url && d.status !== 'rejected').length || 0), 0
+    acc + (app.displayedDocs?.filter((d: any) => d && !d.file_url && d.status !== 'rejected').length || 0), 0
   );
   
   const rejectedDocs = processedApplications.reduce((acc, app) => 
-    acc + (app.displayedDocs?.filter((d: any) => d.status === 'rejected').length || 0), 0
+    acc + (app.displayedDocs?.filter((d: any) => d && d.status === 'rejected').length || 0), 0
   );
 
   return (
@@ -454,6 +467,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full text-start">
                       {app.displayedDocs.map((doc: any) => {
+                        if (!doc) return null;
                         const docName = lang === 'ar' ? doc.document_name_ar : doc.document_name_en;
                         const docStatusText = t.statuses[doc.status as keyof typeof t.statuses] || t.statuses.pending;
                         const styleClass = docStatusStyles[doc.status as keyof typeof docStatusStyles] || docStatusStyles.pending;
