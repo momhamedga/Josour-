@@ -27,7 +27,8 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     redirect(`/${lang}/portal/login`);
   }
 
-  const dict = siteContent[lang];
+  // 🛡️ تأمين قاطع: لو دخل مسار عشوائي، السيستم يفرش اللغة العربية فوراً كـ Fallback لحماية السيرفر
+  const dict = siteContent[lang] || siteContent.ar || {};
   const isRtl = lang === 'ar';
 
   const translations = {
@@ -110,7 +111,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
   let userData: { id: string; company_name: string } | null = null;
   let errorMsg = '';
 
-  // 📝 قاموس التراجم الموحد للمستندات لمنع تكرار الخطأ وتأمين مطابقة الـ Keys
   const docTranslations: Record<string, { ar: string; en: string }> = {
     passport: { ar: 'صورة جواز السفر الساري', en: 'Valid Passport Copy' },
     corporate_papex: { ar: 'عقد التأسيس أو السجل التجاري', en: 'Memorandum of Association' },
@@ -218,16 +218,15 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     rejected: 'bg-rose-50 border-rose-200 text-rose-700',
   };
 
-  // 🔄 تنظيف الفلتر لإزالة خدمات تطوير المواقع تماماً وحصرها في النشاط الاستثماري لجسور
-  const availableServices = (dict.servicesSection?.items || [])
+  // 🛡️ تأمين متكامل: تفادي الانهيار التام عن طريق علامة الاستفهام الاختيارية لمنع قراءة خصائص من حقول undefined
+  const availableServices = (dict?.servicesSection?.items || [])
     .map((item: any) => ({
-      id: item.id,
-      title: item.title,
-      requiredDocs: item.requiredDocs || []
+      id: item?.id || '',
+      title: item?.title || '',
+      requiredDocs: item?.requiredDocs || []
     }))
-    .filter((item: any) => item.id !== 'vip' && item.id !== 'vip_web' && !item.id.includes('design'));
+    .filter((item: any) => item.id && item.id !== 'vip' && item.id !== 'vip_web' && !item.id.includes('design'));
 
-  // 🚀 الهندسة الفورية: بناء مصفوفة المعاملات والمستندات الكاملة مسبقاً لحساب الكروت الحية بدقة
   const processedApplications = rawApplications.map((app) => {
     const currentServiceConfig = availableServices.find((s: any) => String(s.id) === String(app.service_type));
     
@@ -283,16 +282,13 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     };
   });
 
-  // 📊 الحسابات الحية المطلقة المطابقة لحالة الشاشة الحالية
   const totalApps = processedApplications.length;
   const approvedLicenses = processedApplications.filter(a => a.status === 'approved').length;
   
-  // الوثائق المطلوبة = المستندات التي لم ترفع بعد (file_url خالي) وليست مرفوضة
   const pendingDocs = processedApplications.reduce((acc, app) => 
     acc + (app.displayedDocs?.filter((d: any) => !d.file_url && d.status !== 'rejected').length || 0), 0
   );
   
-  // التعديلات المطلوبة = المستندات المخزنة في الداتابيز وحالتها مرفوضة صراحة صادر من المستشار
   const rejectedDocs = processedApplications.reduce((acc, app) => 
     acc + (app.displayedDocs?.filter((d: any) => d.status === 'rejected').length || 0), 0
   );
@@ -527,5 +523,5 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
         </div>
       </div>
     </main>
-  );  
+  );   
 }
