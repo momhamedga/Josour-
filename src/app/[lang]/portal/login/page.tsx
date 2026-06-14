@@ -105,11 +105,11 @@ export default function ClientLoginPage({ params }: PageProps) {
         router.push(`/${currentLang}/portal`);
         router.refresh();
       } else {
-        const errorMsg = currentLang === 'ar' 
-          ? (result.errorAr || result.error) 
-          : (result.errorEn || result.error);
-          
-        setError(errorMsg || t.unknownError);
+      const errorMsg = currentLang === 'ar' 
+    ? result.errorAr 
+    : result.errorEn;
+    
+  setError(errorMsg || t.unknownError);
       }
     });
   };
