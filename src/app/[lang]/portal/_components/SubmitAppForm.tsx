@@ -27,9 +27,9 @@ export default function SubmitAppForm({ userId, lang, isRtl, translations }: Sub
       try {
         const result = await createNewApplication(userId, serviceType, lang);
         // إذا كان الـ Action يعيد كائن خطأ بدلاً من عمل Throw
-        if (result && 'error' in result) {
-          setActionError(result.error);
-        }
+       if (result && 'error' in result) {
+  setActionError(result.error as string);
+}
       } catch (err: any) {
         // التقاط الـ throw new Error المنبعث من السيرفر وعرضه في الواجهة
         setActionError(err.message || 'An unexpected error occurred');
