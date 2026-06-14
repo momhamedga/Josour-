@@ -19,6 +19,39 @@
   }
 }
 
+/* 👑 الإصلاح الجوهري لـ Tailwind v4: ربط السكرول بار صراحة بالجذر لقهر الـ Preflight */
+html, body {
+  scroll-behavior: smooth; /* تفعيل التمرير السلس */
+  
+  /* للمتصفحات التي تدعم كود التمرير الحديث (Firefox) */
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.76 0.11 85) #0d1527;
+}
+
+/* 🏆 المقبض الذهبي والخلفية الكحلية الداكنة لجميع المتصفحات (Chrome, Safari, Edge) */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 10px !important; /* فرض العرض بشكل صارم */
+  height: 10px !important;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: #0d1527 !important; /* خلفية كحلية داكنة صريحة مأخوذة من لون الفوتر */
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, oklch(0.76 0.11 85 / 50%), oklch(0.76 0.11 85)) !important; /* تدرج الذهب الملكي النقي */
+  border-radius: 20px !important;
+  border: 2px solid #0d1527 !important; /* الفاصل السحري ليتنفس السكرول بصرياً */
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.68 0.10 85) !important; /* الذهب الأعمق عند التحويم */
+}
+
 /* تأثير الـ Glassmorphism السينمائي الداكن الممزوج بالذهب للهيدر والفوتر */
 .glass-header {
   background: linear-gradient(135deg, oklch(0.18 0.04 250 / 92%) 0%, oklch(0.14 0.03 250 / 95%) 100%);
