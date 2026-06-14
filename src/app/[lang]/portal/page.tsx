@@ -322,8 +322,9 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
               case 'investor_visa':
                 fallbackDocsKeys = ['passport', 'personal_photo', 'current_visa'];
                 break;
-              default:
-                fallbackDocsKeys = serviceInfo?.requiredDocs || ['passport'];
+           default:
+                // 🚀 الحل الجذري: تحويل النوع مؤقتاً لـ any لقراءة الحقل الديناميكي إن وُجد بدون اعتراض الـ Compiler
+                fallbackDocsKeys = (serviceInfo as any)?.requiredDocs || ['passport'];
                 break;
             }
 
