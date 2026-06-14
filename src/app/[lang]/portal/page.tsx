@@ -151,65 +151,70 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
 
     if (rows.length > 0) {
       // جلب الـ token لملفات Vercel Blob الموقعة
-      let blobToken = '';
+  let blobToken: any = null;
       try {
-        blobToken = await issueSignedToken({ operations: ['get'] });
+        const tokenResult = await issueSignedToken({ operations: ['get'] });
+        blobToken = typeof tokenResult === 'string' ? tokenResult : (tokenResult as any).token;
       } catch (tokenErr) {
         console.error('Failed to issue blob token', tokenErr);
       }
 
-      rawApplications = await Promise.all(
-        rows.map(async (app) => {
-          let updatedApp = { ...app };
+// 1. احسب التوقيت مرة واحدة فقط خارج حلقة الـ map
+const now = Date.now();
+const validUntil = now + 60 * 60 * 1000;
 
-          // 🛡️ حماية Try-Catch لإنشاء الروابط الموقعة لتجنب انهيار الصفحة بسبب داتا تالفة
-          if (blobToken && app.issued_document_url && app.issued_document_url.includes('.private.blob.vercel-storage.com')) {
-            try {
-              const finalUrlObj = new URL(app.issued_document_url);
-              const finalPathname = finalUrlObj.pathname.substring(1);
+rawApplications = await Promise.all(
+  rows.map(async (app) => {
+    const updatedApp = { ...app };
 
-              const { presignedUrl: signedFinalUrl } = await presignUrl(blobToken, {
-                pathname: finalPathname,
-                operation: 'get',
-                access: 'private',
-                validUntil: Date.now() + 60 * 60 * 1000,
-              });
-              updatedApp.issued_document_url = signedFinalUrl;
-            } catch (err) {
-              console.error('Failed to sign final doc url safely', err);
-            }
+    if (blobToken && app.issued_document_url && app.issued_document_url.includes('.private.blob.vercel-storage.com')) {
+      try {
+        const finalUrlObj = new URL(app.issued_document_url);
+        const finalPathname = finalUrlObj.pathname.substring(1);
+        const tokenString = typeof blobToken === 'string' ? blobToken : blobToken.token;
+
+        const { presignedUrl: signedFinalUrl } = await presignUrl(tokenString, {
+          pathname: finalPathname,
+          operation: 'get',
+          access: 'private',
+          validUntil: validUntil, // 🌟 استخدم المتغير الثابت هنا
+        });
+        updatedApp.issued_document_url = signedFinalUrl;
+      } catch (err) {
+        console.error('Failed to sign final doc url safely', err);
+      }
+    }
+
+    if (!app.documents) app.documents = [];
+
+    const securedDocuments = await Promise.all(
+      app.documents.map(async (doc: any) => {
+        if (blobToken && doc?.file_url && doc.file_url.includes('.private.blob.vercel-storage.com')) {
+          try {
+            const urlObj = new URL(doc.file_url);
+            const pathname = urlObj.pathname.substring(1);
+            const tokenString = typeof blobToken === 'string' ? blobToken : blobToken.token;
+
+            const { presignedUrl } = await presignUrl(tokenString, {
+              pathname: pathname,
+              operation: 'get',
+              access: 'private',
+              validUntil: validUntil, // 🌟 استخدم المتغير الثابت هنا
+            });
+
+            return { ...doc, file_url: presignedUrl };
+          } catch (tokenErr) {
+            console.error('Safe bypass for document URL parsing', tokenErr);
+            return doc;
           }
+        }
+        return doc;
+      })
+    );
 
-          if (!app.documents) app.documents = [];
-
-          // 🛡️ حماية تفصيلية لكل وثيقة على حدة لمنع أي ميموري كراش بداخل مصفوفة الداتابيز
-          const securedDocuments = await Promise.all(
-            app.documents.map(async (doc: any) => {
-              if (blobToken && doc?.file_url && doc.file_url.includes('.private.blob.vercel-storage.com')) {
-                try {
-                  const urlObj = new URL(doc.file_url);
-                  const pathname = urlObj.pathname.substring(1);
-
-                  const { presignedUrl } = await presignUrl(blobToken, {
-                    pathname: pathname,
-                    operation: 'get',
-                    access: 'private',
-                    validUntil: Date.now() + 60 * 60 * 1000,
-                  });
-
-                  return { ...doc, file_url: presignedUrl };
-                } catch (tokenErr) {
-                  console.error('Safe bypass for document URL parsing', tokenErr);
-                  return doc;
-                }
-              }
-              return doc;
-            })
-          );
-
-          return { ...updatedApp, documents: securedDocuments };
-        })
-      );
+    return { ...updatedApp, documents: securedDocuments };
+  })
+);
     }
   } catch (err) {
     errorMsg = t.errorFetch;
