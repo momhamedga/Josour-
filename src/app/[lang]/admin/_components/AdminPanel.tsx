@@ -526,7 +526,7 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
                     <div>
                       <UploadIssuedDoc 
                         appId={app.id}
-                        currentUrl={app.issued_document_url}
+currentUrl={app.issued_document_url ?? null}
                         lang={lang}
                         onUploadSuccess={(url) => {
                           if (url === null) {
