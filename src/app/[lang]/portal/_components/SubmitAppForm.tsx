@@ -3,10 +3,16 @@
 import { useState, useTransition } from 'react';
 import { createNewApplication } from '@/app/actions/portal-actions';
 
+// 🚀 الحل الجذري: إعلان استقبال الخدمات بشكل شرعي ونظيف داخل الـ Interface
 interface SubmitAppFormProps {
   userId: string;
   lang: 'ar' | 'en';
   isRtl: boolean;
+  services: {
+    id: any;
+    title: any;
+    requiredDocs: any;
+  }[]; // 👈 تم تثبيت البروب المفقود بنجاح لإخراس التايب سكريبت للأبد
   translations: {
     submitNewApp: string;
     selectService: string;
@@ -14,7 +20,7 @@ interface SubmitAppFormProps {
   };
 }
 
-export default function SubmitAppForm({ userId, lang, isRtl, translations }: SubmitAppFormProps) {
+export default function SubmitAppForm({ userId, lang, isRtl, services, translations }: SubmitAppFormProps) {
   const [isPending, startTransition] = useTransition();
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -27,9 +33,9 @@ export default function SubmitAppForm({ userId, lang, isRtl, translations }: Sub
       try {
         const result = await createNewApplication(userId, serviceType, lang);
         // إذا كان الـ Action يعيد كائن خطأ بدلاً من عمل Throw
-       if (result && 'error' in result) {
-  setActionError(result.error as string);
-}
+        if (result && 'error' in result) {
+          setActionError(result.error as string);
+        }
       } catch (err: any) {
         // التقاط الـ throw new Error المنبعث من السيرفر وعرضه في الواجهة
         setActionError(err.message || 'An unexpected error occurred');
@@ -49,15 +55,19 @@ export default function SubmitAppForm({ userId, lang, isRtl, translations }: Sub
           <label className="text-xs text-brand-navy-dark/60 font-medium block">
             {translations.selectService}
           </label>
+          
+          {/* 🔄 تحويل الـ Select ليكون ديناميكي بالكامل متوافق مع مصفوفة الخدمات الممررة من السيرفر */}
           <select 
             name="service_type" 
             required
             disabled={isPending}
             className="w-full bg-brand-light-bg/50 border border-brand-navy-dark/10 rounded-xl px-3 py-2 text-sm font-medium focus:outline-hidden focus:border-brand-gold disabled:opacity-60"
           >
-            <option value="business_license">{isRtl ? 'رخصة تجارية جديدة' : 'New Business License'}</option>
-            <option value="investor_visa">{isRtl ? 'تأشيرة مستثمر' : 'Investor Visa'}</option>
-            <option value="corporate_bank">{isRtl ? 'فتح حساب بنكي للشركات' : 'Corporate Bank Account'}</option>
+            {services && services.map((srv) => (
+              <option key={srv.id} value={srv.id}>
+                {srv.title}
+              </option>
+            ))}
           </select>
         </div>
         

@@ -259,15 +259,15 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
 
         {/* الكومبوننت التفاعلي لتقديم المعاملات الجديدة */}
         {userData && (
-          <SubmitAppForm 
-            userId={userData.id}
+       <SubmitAppForm 
+            userId={user.id}
             lang={lang}
             isRtl={isRtl}
             services={availableServices}
             translations={{
               submitNewApp: t.submitNewApp,
               selectService: t.selectService,
-              btnApply: t.btnApply
+              btnApply: t.btnApply,
             }}
           />
         )}
