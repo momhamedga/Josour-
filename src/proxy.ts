@@ -64,7 +64,6 @@ export function proxy(request: NextRequest) {
   return NextResponse.redirect(new URL(`/${defaultLocale}${pathname}`, request.url));
 }
 
-// 🛠️ 3. تحديث الـ matcher لعام 2026 لاستثناء مجلد الـ videos بشكل صريح من فخ التوجيه
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|videos|images|assets).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|favicon.webp|videos|images|assets).*)'],
 };
