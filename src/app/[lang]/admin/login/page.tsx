@@ -52,9 +52,12 @@ export default function AdminLoginPage({ params }: PageProps) {
         router.refresh();
       } else {
         // ✅ استقبال الخطأ الديناميكي المترجم القادم من الـ Server Action بدقة وثبات لايف
-        const errorMsg = unwrappedParams.lang === 'ar' 
-          ? (result.errorAr || result.error) 
-          : (result.errorEn || result.error);
+   // ✅ استقبال الخطأ الديناميكي المترجم القادم من الـ Server Action بدقة وثبات
+const errorMsg = unwrappedParams.lang === 'ar' 
+  ? result.errorAr 
+  : result.errorEn;
+
+setError(errorMsg || t.unknownError);
 
         setError(errorMsg || t.unknownError);
       }
