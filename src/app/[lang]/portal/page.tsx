@@ -1,3 +1,7 @@
+// 🌟 إجبار المترجم على معالجة الصفحة ديناميكياً 100% ومنع الـ Pre-rendering الصامت
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { issueSignedToken, presignUrl } from '@vercel/blob';
 import { siteContent } from '@/config/josour-content';
 import { sql } from '@/lib/neon';
@@ -150,8 +154,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     ` as any[];
 
     if (rows.length > 0) {
-      // جلب الـ token لملفات Vercel Blob الموقعة
-  let blobToken: any = null;
+      let blobToken: any = null;
       try {
         const tokenResult = await issueSignedToken({ operations: ['get'] });
         blobToken = typeof tokenResult === 'string' ? tokenResult : (tokenResult as any).token;
@@ -159,62 +162,62 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
         console.error('Failed to issue blob token', tokenErr);
       }
 
-// 1. احسب التوقيت مرة واحدة فقط خارج حلقة الـ map
-const now = Date.now();
-const validUntil = now + 60 * 60 * 1000;
+      // 🌟 احتساب الوقت الثابت الآمن بداخل الـ Execution Block
+      const now = Date.now();
+      const validUntil = now + 60 * 60 * 1000;
 
-rawApplications = await Promise.all(
-  rows.map(async (app) => {
-    const updatedApp = { ...app };
+      rawApplications = await Promise.all(
+        rows.map(async (app) => {
+          const updatedApp = { ...app };
 
-    if (blobToken && app.issued_document_url && app.issued_document_url.includes('.private.blob.vercel-storage.com')) {
-      try {
-        const finalUrlObj = new URL(app.issued_document_url);
-        const finalPathname = finalUrlObj.pathname.substring(1);
-        const tokenString = typeof blobToken === 'string' ? blobToken : blobToken.token;
+          if (blobToken && app.issued_document_url && app.issued_document_url.includes('.private.blob.vercel-storage.com')) {
+            try {
+              const finalUrlObj = new URL(app.issued_document_url);
+              const finalPathname = finalUrlObj.pathname.substring(1);
+              const tokenString = typeof blobToken === 'string' ? blobToken : blobToken.token;
 
-        const { presignedUrl: signedFinalUrl } = await presignUrl(tokenString, {
-          pathname: finalPathname,
-          operation: 'get',
-          access: 'private',
-          validUntil: validUntil, // 🌟 استخدم المتغير الثابت هنا
-        });
-        updatedApp.issued_document_url = signedFinalUrl;
-      } catch (err) {
-        console.error('Failed to sign final doc url safely', err);
-      }
-    }
-
-    if (!app.documents) app.documents = [];
-
-    const securedDocuments = await Promise.all(
-      app.documents.map(async (doc: any) => {
-        if (blobToken && doc?.file_url && doc.file_url.includes('.private.blob.vercel-storage.com')) {
-          try {
-            const urlObj = new URL(doc.file_url);
-            const pathname = urlObj.pathname.substring(1);
-            const tokenString = typeof blobToken === 'string' ? blobToken : blobToken.token;
-
-            const { presignedUrl } = await presignUrl(tokenString, {
-              pathname: pathname,
-              operation: 'get',
-              access: 'private',
-              validUntil: validUntil, // 🌟 استخدم المتغير الثابت هنا
-            });
-
-            return { ...doc, file_url: presignedUrl };
-          } catch (tokenErr) {
-            console.error('Safe bypass for document URL parsing', tokenErr);
-            return doc;
+              const { presignedUrl: signedFinalUrl } = await presignUrl(tokenString, {
+                pathname: finalPathname,
+                operation: 'get',
+                access: 'private',
+                validUntil: validUntil,
+              });
+              updatedApp.issued_document_url = signedFinalUrl;
+            } catch (err) {
+              console.error('Failed to sign final doc url safely', err);
+            }
           }
-        }
-        return doc;
-      })
-    );
 
-    return { ...updatedApp, documents: securedDocuments };
-  })
-);
+          if (!app.documents) app.documents = [];
+
+          const securedDocuments = await Promise.all(
+            app.documents.map(async (doc: any) => {
+              if (blobToken && doc?.file_url && doc.file_url.includes('.private.blob.vercel-storage.com')) {
+                try {
+                  const urlObj = new URL(doc.file_url);
+                  const pathname = urlObj.pathname.substring(1);
+                  const tokenString = typeof blobToken === 'string' ? blobToken : blobToken.token;
+
+                  const { presignedUrl } = await presignUrl(tokenString, {
+                    pathname: pathname,
+                    operation: 'get',
+                    access: 'private',
+                    validUntil: validUntil,
+                  });
+
+                  return { ...doc, file_url: presignedUrl };
+                } catch (tokenErr) {
+                  console.error('Safe bypass for document URL parsing', tokenErr);
+                  return doc;
+                }
+              }
+              return doc;
+            })
+          );
+
+          return { ...updatedApp, documents: securedDocuments };
+        })
+      );
     }
   } catch (err) {
     errorMsg = t.errorFetch;
@@ -235,7 +238,6 @@ rawApplications = await Promise.all(
     rejected: 'bg-rose-50 border-rose-200 text-rose-700',
   };
 
-  // 🛡️ تأمين متكامل ومقاوم للـ undefined لقراءة قائمة الخدمات من التكوينات
   const servicesItems = dict?.servicesSection?.items || siteContent?.ar?.servicesSection?.items || [];
   const availableServices = servicesItems
     .map((item: any) => ({
