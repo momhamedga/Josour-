@@ -34,8 +34,8 @@ export default function ClientLoginPage({ params }: PageProps) {
   const unwrappedParams = use(params);
   const currentLang = unwrappedParams.lang;
   const isRtl = currentLang === 'ar';
-
-  const t = {
+// 🚀 1. تعريف القاموس في كائن مستقل تماماً لمنع التداخل الدائري (Circular Reference)
+  const dictionary: any = {
     ar: {
       loginTitle: 'بوابة المستثمر الذكية',
       loginSubtitle: 'أدخل البريد الإلكتروني المسجل التابع لمنشأتك لتتبع الرخص والتأشيرات لايف',
@@ -55,7 +55,7 @@ export default function ClientLoginPage({ params }: PageProps) {
       placeholderPhone: '50 123 4567',
       hasAccount: 'لديك حساب بالفعل؟ تسجيل الدخول',
       noAccount: 'مستثمر جديد؟ سجل منشأتك الآن فوراً',
-      backHome: 'العودة للرئيسية', // 👈 نص العودة للرئيسية بالعربية
+      backHome: 'العودة للرئيسية',
       unknownError: 'خطأ غير معروف في نظام الحماية.'
     },
     en: {
@@ -77,10 +77,13 @@ export default function ClientLoginPage({ params }: PageProps) {
       placeholderPhone: '50 123 4567',
       hasAccount: 'Already registered? Sign In here',
       noAccount: 'New Investor? Register your entity now',
-      backHome: 'Back to Home', // 👈 نص العودة للرئيسية بالإنجليزية
+      backHome: 'Back to Home',
       unknownError: 'An unknown secure server connection error occurred.'
     }
-  }[currentLang] || t.ar;
+  };
+
+  // 👑 2. حقن التوجيه اللغوي الآمن والسليم بنسبة 100% متوافق مع Vercel Production
+  const t = dictionary[currentLang] || dictionary.ar;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
