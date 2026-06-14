@@ -1,4 +1,3 @@
-// 🌟 إجبار المترجم على معالجة الصفحة ديناميكياً 100% ومنع الـ Pre-rendering الصامت
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -22,10 +21,8 @@ interface PortalPageProps {
 }
 
 export default async function ClientPortalPage({ params }: PortalPageProps) {
-  // 1. فك الـ Params بأمان
   const { lang } = await params;
 
-  // 2. التحقق من الكوكيز
   const cookieStore = await cookies();
   const userEmail = cookieStore.get('user_email')?.value;
 
@@ -33,7 +30,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     redirect(`/${lang}/portal/login`);
   }
 
-  // 3. تأمين القاموس والمحتوى من الانهيار التام
   const dict = siteContent?.[lang] || siteContent?.ar || {};
   const isRtl = lang === 'ar';
 
@@ -162,7 +158,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
         console.error('Failed to issue blob token', tokenErr);
       }
 
-      // 🌟 احتساب الوقت الثابت الآمن بداخل الـ Execution Block
       const now = Date.now();
       const validUntil = now + 60 * 60 * 1000;
 
