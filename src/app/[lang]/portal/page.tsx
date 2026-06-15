@@ -12,7 +12,7 @@ import TransactionTimeline from './_components/TransactionTimeline';
 import PortalNotification from './_components/PortalNotification';
 import DocumentResubmitter from './_components/DocumentResubmitter';
 import DeleteAppButton from './_components/DeleteAppButton'; 
-import SubmitAppForm from './_components/SubmitAppForm'; 
+import ClientAppManager from './_components/ClientAppManager'; // المكون الفخم الجديد
 import Link from 'next/link';
 import ClientIdCopyButton from './_components/ClientIdCopyButton'; 
 
@@ -21,11 +21,9 @@ interface PortalPageProps {
 }
 
 export default async function ClientPortalPage({ params }: PortalPageProps) {
-  // 1. فك الـ Params واللغة فوراً لمنع الـ Async Collisions
   const { lang } = await params;
   const isRtl = lang === 'ar';
 
-  // 2. التحقق الآمن والمباشر من الكوكيز
   const cookieStore = await cookies();
   const userEmail = cookieStore.get('user_email')?.value;
 
@@ -33,7 +31,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     redirect(`/${lang}/portal/login`);
   }
 
-  // 3. تأمين كتل التراجم والقواميس الثابتة والاحتياطية
   const dict = siteContent?.[lang] || siteContent?.ar || {};
 
   const translations = {
@@ -113,7 +110,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
 
   const t = translations[lang] || translations.ar;
   
-  // 🌟 تعريف مسبق لضمان بقاء المتغيرات حية حتى لو انفجرت الداتابيز
   let rawApplications: any[] = [];
   let userData: { id: string; company_name: string } | null = null;
   let errorMsg = '';
@@ -131,7 +127,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     id_card: { ar: 'الهوية الوطنية / بطاقة الإقامة', en: 'National ID / Emirates ID' }
   };
 
-  // 🛡️ المظلة المطلقة: حماية شاملة للعمليات الخارجية والـ I/O
   try {
     const userRows = await sql`SELECT id, company_name FROM users WHERE email = ${userEmail} LIMIT 1` as any[];
     if (userRows && userRows.length > 0) {
@@ -217,13 +212,11 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
             })
           );
 
-          // تنظيف أي قيم فارغة بداخل المصفوفة الموقعة
           updatedApp.documents = securedDocuments.filter(Boolean);
           return updatedApp;
         })
       );
       
-      // إزالة أي طلبات تالفة خرجت كـ null
       rawApplications = rawApplications.filter(Boolean);
     }
   } catch (err) {
@@ -360,20 +353,19 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
           )}
         </div>
 
+        {/* 🌟 دمج مدير الطلبات التفاعلي والفاخر المحمي ضد أخطاء السيرفر */}
         {userData && (
-          <div className="w-full">
-            <SubmitAppForm 
-              userId={userData.id}
-              lang={lang}
-              isRtl={isRtl}
-              services={availableServices}
-              translations={{
-                submitNewApp: t.submitNewApp,
-                selectService: t.selectService,
-                btnApply: t.btnApply
-              }}
-            />
-          </div>
+          <ClientAppManager 
+            userId={userData.id}
+            lang={lang}
+            isRtl={isRtl}
+            availableServices={availableServices}
+            translations={{
+              submitNewApp: t.submitNewApp,
+              selectService: t.selectService,
+              btnApply: t.btnApply
+            }}
+          />
         )}
 
         <PortalNotification rejectedCount={rejectedDocs} lang={lang} />
