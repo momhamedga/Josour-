@@ -21,8 +21,11 @@ interface PortalPageProps {
 }
 
 export default async function ClientPortalPage({ params }: PortalPageProps) {
+  // 1. فك الـ Params واللغة فوراً لمنع الـ Async Collisions
   const { lang } = await params;
+  const isRtl = lang === 'ar';
 
+  // 2. التحقق الآمن والمباشر من الكوكيز
   const cookieStore = await cookies();
   const userEmail = cookieStore.get('user_email')?.value;
 
@@ -30,8 +33,8 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     redirect(`/${lang}/portal/login`);
   }
 
+  // 3. تأمين كتل التراجم والقواميس الثابتة والاحتياطية
   const dict = siteContent?.[lang] || siteContent?.ar || {};
-  const isRtl = lang === 'ar';
 
   const translations = {
     ar: {
@@ -109,6 +112,8 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
   };
 
   const t = translations[lang] || translations.ar;
+  
+  // 🌟 تعريف مسبق لضمان بقاء المتغيرات حية حتى لو انفجرت الداتابيز
   let rawApplications: any[] = [];
   let userData: { id: string; company_name: string } | null = null;
   let errorMsg = '';
@@ -126,9 +131,10 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     id_card: { ar: 'الهوية الوطنية / بطاقة الإقامة', en: 'National ID / Emirates ID' }
   };
 
+  // 🛡️ المظلة المطلقة: حماية شاملة للعمليات الخارجية والـ I/O
   try {
     const userRows = await sql`SELECT id, company_name FROM users WHERE email = ${userEmail} LIMIT 1` as any[];
-    if (userRows.length > 0) {
+    if (userRows && userRows.length > 0) {
       userData = { id: userRows[0].id, company_name: userRows[0].company_name };
     }
 
@@ -149,13 +155,13 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
       ORDER BY a.updated_at DESC
     ` as any[];
 
-    if (rows.length > 0) {
+    if (rows && rows.length > 0) {
       let blobToken: any = null;
       try {
         const tokenResult = await issueSignedToken({ operations: ['get'] });
-        blobToken = typeof tokenResult === 'string' ? tokenResult : (tokenResult as any).token;
+        blobToken = typeof tokenResult === 'string' ? tokenResult : (tokenResult as any)?.token;
       } catch (tokenErr) {
-        console.error('Failed to issue blob token', tokenErr);
+        console.error('Safe bypassed blob token issuance', tokenErr);
       }
 
       const now = Date.now();
@@ -163,6 +169,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
 
       rawApplications = await Promise.all(
         rows.map(async (app) => {
+          if (!app) return null;
           const updatedApp = { ...app };
 
           if (blobToken && app.issued_document_url && app.issued_document_url.includes('.private.blob.vercel-storage.com')) {
@@ -179,7 +186,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
               });
               updatedApp.issued_document_url = signedFinalUrl;
             } catch (err) {
-              console.error('Failed to sign final doc url safely', err);
+              console.error('Failed to presign final URL safely', err);
             }
           }
 
@@ -187,6 +194,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
 
           const securedDocuments = await Promise.all(
             app.documents.map(async (doc: any) => {
+              if (!doc) return null;
               if (blobToken && doc?.file_url && doc.file_url.includes('.private.blob.vercel-storage.com')) {
                 try {
                   const urlObj = new URL(doc.file_url);
@@ -202,7 +210,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
 
                   return { ...doc, file_url: presignedUrl };
                 } catch (tokenErr) {
-                  console.error('Safe bypass for document URL parsing', tokenErr);
                   return doc;
                 }
               }
@@ -210,13 +217,18 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
             })
           );
 
-          return { ...updatedApp, documents: securedDocuments };
+          // تنظيف أي قيم فارغة بداخل المصفوفة الموقعة
+          updatedApp.documents = securedDocuments.filter(Boolean);
+          return updatedApp;
         })
       );
+      
+      // إزالة أي طلبات تالفة خرجت كـ null
+      rawApplications = rawApplications.filter(Boolean);
     }
   } catch (err) {
     errorMsg = t.errorFetch;
-    console.error('Main db transaction failed', err);
+    console.error('Absolute Main DB Render Safe Crash Catch:', err);
   }
 
   const statusColors = {
@@ -243,6 +255,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     .filter((item: any) => item.id && item.id !== 'vip' && item.id !== 'vip_web' && !item.id.includes('design'));
 
   const processedApplications = rawApplications.map((app) => {
+    if (!app) return null;
     const currentServiceConfig = availableServices.find((s: any) => String(s.id) === String(app.service_type));
     
     let fallbackDocsKeys: string[] = [];
@@ -295,17 +308,17 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
       displayedDocs,
       serviceTitle: currentServiceConfig ? currentServiceConfig.title : app.service_type
     };
-  });
+  }).filter(Boolean);
 
   const totalApps = processedApplications.length;
-  const approvedLicenses = processedApplications.filter(a => a.status === 'approved').length;
+  const approvedLicenses = processedApplications.filter(a => a && a.status === 'approved').length;
   
   const pendingDocs = processedApplications.reduce((acc, app) => 
-    acc + (app.displayedDocs?.filter((d: any) => d && !d.file_url && d.status !== 'rejected').length || 0), 0
+    acc + (app?.displayedDocs?.filter((d: any) => d && !d.file_url && d.status !== 'rejected').length || 0), 0
   );
   
   const rejectedDocs = processedApplications.reduce((acc, app) => 
-    acc + (app.displayedDocs?.filter((d: any) => d && d.status === 'rejected').length || 0), 0
+    acc + (app?.displayedDocs?.filter((d: any) => d && d.status === 'rejected').length || 0), 0
   );
 
   return (
@@ -396,6 +409,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
 
         <div className="grid grid-cols-1 gap-5 sm:gap-8 w-full">
           {processedApplications.map((app) => {
+            if (!app) return null;
             const currentColors = statusColors[app.status as keyof typeof statusColors] || statusColors.pending;
             const statusText = t.statuses[app.status as keyof typeof t.statuses] || t.statuses.pending;
 
@@ -461,7 +475,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
                   </div>
                 )}
 
-                {app.displayedDocs.length > 0 && (
+                {app.displayedDocs && app.displayedDocs.length > 0 && (
                   <div className="mt-4 pt-4 border-t border-brand-navy-dark/[0.05] w-full text-start">
                     <h4 className="text-xs sm:text-sm font-black text-brand-navy-dark mb-3 flex items-center gap-1.5 text-start">
                       <span className="w-1 h-2.5 bg-brand-gold rounded-full inline-block" />
