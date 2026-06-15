@@ -433,23 +433,29 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
       }
     });
   };
-
+  
   const handleCreateApplication = async (formValues: any) => {
+    if (!formValues.userId || !formValues.serviceType) {
+      return alert(lang === 'ar' ? 'الرجاء ملء الحقول الأساسية وتحديد المستثمر' : 'Please fill main fields and select an investor');
+    }
+
     startTransition(async () => {
+      // تنظيف البيانات لضمان عدم إرسال حقول فارغة ترفضها الداتابيز
       const result = await adminCreateApplication({
         userId: formValues.userId,
         serviceType: formValues.serviceType,
-        status: formValues.status,
-        progress: Number(formValues.progress),
-        notes: formValues.notes,
-        sla_hours_limit: Number(formValues.sla_hours_limit)
+        status: formValues.status || 'pending',
+        progress: Number(formValues.progress) || 0,
+        notes: formValues.notes && formValues.notes.trim() !== '' ? formValues.notes : (lang === 'ar' ? 'تم فتح السجل التتبعي بنجاح' : 'Tracking registry initiated successfully'),
+        sla_hours_limit: Number(formValues.sla_hours_limit) || 48
       } as any);
 
-      if (result.success) {
+      if (result && result.success) {
         setIsCreateModalOpen(false);
+        // التحديث الذكي: إعادة تنشيط المسار حياً بدلاً من الـ reload العنيف إذا أمكن، أو الـ reload كخيار حاسم
         window.location.reload();
       } else {
-        alert(lang === 'ar' ? 'فشل إنشاء المعاملة، تأكد من البيانات' : 'Failed to create application');
+        alert(lang === 'ar' ? 'فشل إنشاء المعاملة، تأكد من اتصال قاعدة البيانات وصلاحية المستثمر' : 'Failed to create application, check database constraints');
       }
     });
   };
