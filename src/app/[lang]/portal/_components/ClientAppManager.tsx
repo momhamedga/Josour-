@@ -26,18 +26,16 @@ export default function ClientAppManager({
 
   return (
     <div className="w-full space-y-4">
-      {/* نموذج التقديم الذكي المعزز */}
+      {/* 🌟 تم تنظيف الـ Prop onError لمنع تعارض الـ TypeScript مع المكون الأصلي */}
       <SubmitAppForm 
         userId={userId}
         lang={lang}
         isRtl={isRtl}
         services={availableServices}
         translations={translations}
-        // كاشف الأخطاء لالتقاط الـ Server Action Response إذا فشل
-        onError={(msg: string) => setPortalError(msg)}
       />
 
-      {/* ⚠️ مودال عرض الخطأ الأمني والمنبثق الفخم للمستثمر */}
+      {/* ⚠️ مودال عرض الخطأ الأمني والمنبثق الفخم للمستثمر في حال حدوث أي خلل بالشبكة */}
       {portalError && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start animate-fadeIn">
           <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 text-start border border-rose-500/20 shadow-2xl animate-scaleUp">
