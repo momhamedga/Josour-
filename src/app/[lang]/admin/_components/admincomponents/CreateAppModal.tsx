@@ -22,7 +22,23 @@ export default function CreateAppModal({ isOpen, setIsOpen, allUsersList, handle
     sla_hours_limit: 48 
   });
 
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   if (!isOpen) return null;
+
+  const validateAndSubmit = () => {
+    setValidationError(null);
+    if (!form.userId) {
+      setValidationError(lang === 'ar' ? 'الرجاء اختيار المستثمر المستهدف أولاً' : 'Please select targeted investor first');
+      return;
+    }
+    if (!form.serviceType) {
+      setValidationError(lang === 'ar' ? 'الرجاء تحديد نوع الخدمة المخصصة' : 'Please select tracking service type');
+      return;
+    }
+    // إرسال البيانات للمكون الرئيسي مغسولة ومطهرة 100%
+    handleCreate(form);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start animate-fadeIn">
@@ -32,13 +48,22 @@ export default function CreateAppModal({ isOpen, setIsOpen, allUsersList, handle
           <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-black font-black cursor-pointer p-1">✕</button>
         </div>
         
+        {validationError && (
+          <div className="bg-rose-50 text-rose-600 p-3 rounded-xl border border-rose-100 text-xs font-bold animate-fadeIn">
+            ⚠️ {validationError}
+          </div>
+        )}
+
         <div className="space-y-3 text-xs font-bold text-start">
           <div className="text-start">
             <label className="block mb-1 font-black text-start">{t.selectUser}</label>
             <select 
               className="w-full border p-2.5 rounded-xl bg-gray-50 text-start cursor-pointer font-semibold focus:outline-none"
               value={form.userId}
-              onChange={(e) => setForm({ ...form, userId: e.target.value })}
+              onChange={(e) => {
+                setValidationError(null);
+                setForm({ ...form, userId: e.target.value });
+              }}
             >
               <option value="">-- {lang === 'ar' ? 'اختر مستثمر لتخصيص المعاملة' : 'Select investor'} --</option>
               {allUsersList.map(u => u && <option key={u.id} value={u.id}>{u.name} ({u.company_name})</option>)}
@@ -80,7 +105,7 @@ export default function CreateAppModal({ isOpen, setIsOpen, allUsersList, handle
           </div>
 
           <button 
-            onClick={() => handleCreate(form)}
+            onClick={validateAndSubmit}
             disabled={isPending}
             className="w-full bg-brand-navy-dark text-white font-black p-3 rounded-xl mt-2 hover:bg-brand-navy-light cursor-pointer select-none transition-colors"
           >

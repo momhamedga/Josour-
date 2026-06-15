@@ -58,6 +58,9 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
   const [isPending, startTransition] = useTransition();
   const [successId, setSuccessId] = useState<string | null>(null);
 
+  // 🌟 حالة تخزين وإطلاق المودال الأمني للخطأ الحديث بدلاً من الـ Alert
+  const [createError, setCreateError] = useState<string | null>(null);
+
   useEffect(() => {
     setApps(initialApplications);
   }, [initialApplications]);
@@ -151,7 +154,9 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
       finalDocTitle: '🏆 تسليم وثيقة الإنجاز النهائي للمستثمر',
       finalDocDesc: 'ارفع هنا الرخصة الصادرة، السجل التجاري، أو التأشيرة المختومة لتظهر فوراً في شاشة العميل.',
       previewFinalDoc: 'معاينة الوثيقة النهائية الصادرة 👁️',
-      close: 'إغلاق'
+      close: 'إغلاق',
+      errorTitle: '⚠️ عطل في معالجة الطلب الدبلوماسي',
+      errorDesc: 'فشل إنشاء المعاملة. يرجى التحقق من اتصال قاعدة البيانات السحابية (Neon SQL) والتأكد من صلاحية حساب المستثمر المحدد أو عدم تجاوزه للحد الأقصى المسموح به.'
     },
     en: {
       title: 'Consultant Intelligent Admin Dashboard',
@@ -223,7 +228,9 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
       finalDocTitle: 'Investor Final Document Delivery',
       finalDocDesc: 'Upload the issued license, commercial register, or visa here to appear directly in the client portal.',
       previewFinalDoc: 'Preview Final Issued Document 👁️',
-      close: 'Close'
+      close: 'Close',
+      errorTitle: '⚠️ Request Execution Failure',
+      errorDesc: 'Failed to create application. Please ensure the cloud database (Neon SQL) connection is active and that the selected investor profile has no structural constraint blocks.'
     }
   }[lang];
 
@@ -356,7 +363,7 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
     acc + (app.documents?.filter(d => d.status === 'rejected').length || 0), 0
   );
 
-  const handleFieldChange = (id: string, field: keyof ApplicationItem, value: any) => {
+  const handleFieldChange = (id: string, field: any, value: any) => {
     setApps(prev => prev.map(app => app.id === id ? { ...app, [field]: value } : app));
   };
 
@@ -435,12 +442,8 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
   };
   
   const handleCreateApplication = async (formValues: any) => {
-    if (!formValues.userId || !formValues.serviceType) {
-      return alert(lang === 'ar' ? 'الرجاء ملء الحقول الأساسية وتحديد المستثمر' : 'Please fill main fields and select an investor');
-    }
-
+    setCreateError(null); // تصفير الخطأ قبل البدء
     startTransition(async () => {
-      // تنظيف البيانات لضمان عدم إرسال حقول فارغة ترفضها الداتابيز
       const result = await adminCreateApplication({
         userId: formValues.userId,
         serviceType: formValues.serviceType,
@@ -452,10 +455,10 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
 
       if (result && result.success) {
         setIsCreateModalOpen(false);
-        // التحديث الذكي: إعادة تنشيط المسار حياً بدلاً من الـ reload العنيف إذا أمكن، أو الـ reload كخيار حاسم
         window.location.reload();
       } else {
-        alert(lang === 'ar' ? 'فشل إنشاء المعاملة، تأكد من اتصال قاعدة البيانات وصلاحية المستثمر' : 'Failed to create application, check database constraints');
+        // 🌟 قمنا بحقن نص الخطأ في كائن الحالة لتفجير المودال الفاخر تلقائياً!
+        setCreateError(result.error || t.errorDesc);
       }
     });
   };
@@ -485,7 +488,7 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
         </button>
       </div>
 
-      {/* Stats Cards مفصول ومحسن بالكامل الأداء حياً */}
+      {/* Stats Cards */}
       <StatsCards 
         totalApps={totalApps} 
         approvedLicenses={approvedLicenses} 
@@ -494,7 +497,7 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
         t={t} 
       />
 
-      {/* Filter Bar مفصول ومؤمن Re-renders */}
+      {/* Filter Bar */}
       <FilterBar 
         searchQuery={searchQuery} setSearchQuery={setSearchQuery}
         selectedClient={selectedClient} setSelectedClient={setSelectedClient}
@@ -838,6 +841,31 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
                 className="flex-1 bg-rose-600 hover:bg-rose-700 text-white p-3 rounded-xl cursor-pointer select-none transition-colors disabled:opacity-50"
               >
                 {isPending ? t.saving : t.confirm}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ⚠️ مودال عرض خطأ الإنشاء المطور والفاخر (بديل الـ alert القديم) */}
+      {createError && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 text-start border border-rose-500/20 shadow-2xl animate-scaleUp">
+            <div className="text-center sm:text-start space-y-2">
+              <h3 className="font-black text-rose-600 text-base sm:text-lg flex items-center gap-2 justify-center sm:justify-start">
+                {t.errorTitle}
+              </h3>
+              <p className="text-brand-navy-dark/80 text-xs sm:text-sm font-semibold leading-relaxed bg-rose-50/50 p-3.5 rounded-xl border border-rose-100">
+                {createError}
+              </p>
+            </div>
+            
+            <div className="flex items-center pt-2 text-xs font-black">
+              <button
+                onClick={() => setCreateError(null)}
+                className="w-full bg-brand-navy-dark hover:bg-brand-navy-light text-white p-3 rounded-xl cursor-pointer select-none transition-colors"
+              >
+                {lang === 'ar' ? 'فهمت الأمر ومتابعة التدقيق' : 'Dismiss & Review'}
               </button>
             </div>
           </div>
