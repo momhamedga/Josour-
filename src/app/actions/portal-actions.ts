@@ -31,15 +31,11 @@ export async function resubmitDocument(
       return { success: false, error: lang === 'ar' ? 'لم يتم اختيار ملف' : 'No file provided' };
     }
 
-    // رفع الملف بأمان إلى Vercel Blob Storage
     const blob = await put(`portal-docs/${appId}-${Date.now()}-${file.name}`, file, {
       access: 'private',
     });
 
-    // التحقق الذكي: هل المستند جديد كلياً (Fallback) أم مستند مرفوض مسبقاً؟
     if (docId.startsWith('fallback-')) {
-      
-      // استنتاج اسم المستند بناءً على المعرف الاحتياطي الممرر
       let docNameAr = 'مستند مرفق';
       let docNameEn = 'Attached Document';
 
@@ -60,7 +56,6 @@ export async function resubmitDocument(
         docNameEn = 'Current Visa/Entry Permit'; 
       }
 
-      // إدخال سطر جديد كلياً في قاعدة البيانات
       await sql`
         INSERT INTO application_documents (
           application_id, 
@@ -77,7 +72,6 @@ export async function resubmitDocument(
         )
       `;
     } else {
-      // إذا كان المستند موجوداً مسبقاً ومرفوضاً، نقوم بتحديث الرابط وحالته إلى قيد الانتظار
       await sql`
         UPDATE application_documents
         SET file_url = ${blob.url}, status = 'pending', updated_at = NOW()
@@ -85,16 +79,13 @@ export async function resubmitDocument(
       `;
     }
 
-    // تحديث حالة المعاملة الأب لتصبح "تحت التدقيق والمراجعة" تلقائياً بمجرد رفع أي ملف
     await sql`
       UPDATE applications
       SET status = 'review', updated_at = NOW()
       WHERE id = ${appId}
     `;
 
-    // تحديث الكاش الفوري لـ Next.js لمزامنة الصفحة
     revalidatePath(`/${lang}/portal`);
-
     return { success: true };
   } catch (error: any) {
     console.error('Error uploading file:', error);
@@ -105,7 +96,7 @@ export async function resubmitDocument(
   }
 }
 
-// 2. إنشاء معاملة جديدة مع تطبيق القيود الصارمة
+// 2. إنشاء معاملة جديدة مع تطبيق القيود الصارمة (تم إصلاح تفجير الـ Error)
 export async function createNewApplication(userId: string, serviceType: string, lang: 'ar' | 'en') {
   const errors = {
     ar: {
@@ -121,7 +112,7 @@ export async function createNewApplication(userId: string, serviceType: string, 
   const t = errors[lang] || errors.ar;
 
   try {
-    // 1. القيد الأول: حد أقصى 6 معاملات شهرياً (خلال الشهر الميلادي الحالي)
+    // 1. حد أقصى 6 معاملات شهرياً
     const monthlyCheck = await sql`
       SELECT COUNT(*) as count 
       FROM applications 
@@ -134,10 +125,11 @@ export async function createNewApplication(userId: string, serviceType: string, 
       : Number(monthlyCheck[0]?.count || 0);
 
     if (monthlyCount >= 6) {
-      throw new Error(t.monthlyLimit);
+      // 🌟 التعديل السحري: إرجاع كائن الخطأ بدلاً من عمل throw المدمر للـ Build
+      return { error: t.monthlyLimit };
     }
 
-    // 2. القيد الثاني: عدم إمكانية فتح أكثر من 3 معاملات نشطة إلا لو تم اعتماد 2 منها على الأقل
+    // 2. حد أقصى للمعاملات النشطة
     const activeCheck = await sql`
       SELECT 
         COUNT(*) FILTER (WHERE status NOT IN ('approved', 'rejected')) as active_count,
@@ -154,25 +146,23 @@ export async function createNewApplication(userId: string, serviceType: string, 
       ? parseInt(activeCheck[0].approved_count, 10)
       : Number(activeCheck[0]?.approved_count || 0);
 
-    // إذا كان لديه 3 معاملات نشطة أو أكثر، ولم يعتمد له معاملتان على الأقل، يتم منعه
     if (activeCount >= 3 && approvedCount < 2) {
-      throw new Error(t.activeLimit);
+      // 🌟 التعديل السحري: إرجاع كائن الخطأ بدلاً من عمل throw المدمر للـ Build
+      return { error: t.activeLimit };
     }
 
-    // 3. إذا تم اجتياز القيود بنجاح -> يتم إدراج المعاملة الجديدة
+    // 3. إدراج المعاملة بنجاح
     await sql`
       INSERT INTO applications (user_id, service_type, status, progress, created_at, updated_at)
       VALUES (${userId}, ${serviceType}, 'pending', 0, NOW(), NOW())
     `;
 
-    // تحديث الكاش لتظهر المعاملة فوراً في البوابة
     revalidatePath(`/${lang}/portal`);
-    
     return { success: true };
 
   } catch (error: any) {
     console.error('Application Creation Error:', error);
-    throw new Error(error.message || 'An unexpected error occurred');
+    return { error: error.message || 'An unexpected error occurred' };
   }
 }
 
@@ -204,10 +194,9 @@ export async function updateApplicationDetails(
   }
 }
 
-// 4. حذف المعاملة مع تطبيق الشرط الأمني الصارم للعميل
+// 4. حذف المعاملة مع تطبيق الشرط الأمني الصارم للعميل (تم التعديل للأمان)
 export async function deleteApplication(appId: string, lang: 'ar' | 'en') {
   try {
-    // أ) التحقق من حالة المعاملة أولاً قبل الحذف
     const appRows = await sql`
       SELECT status FROM applications WHERE id = ${appId} LIMIT 1
     ` as unknown as DbStatusRow[];
@@ -221,7 +210,6 @@ export async function deleteApplication(appId: string, lang: 'ar' | 'en') {
 
     const currentStatus = appRows[0].status;
 
-    // ب) تطبيق الشرط الأمني
     if (currentStatus !== 'approved') {
       return {
         success: false,
@@ -231,10 +219,7 @@ export async function deleteApplication(appId: string, lang: 'ar' | 'en') {
       };
     }
 
-    // ج) حذف المستندات المرتبطة بها أولاً لتجنب مشاكل الـ Foreign Key
     await sql`DELETE FROM application_documents WHERE application_id = ${appId}`;
-    
-    // د) حذف المعاملة نفسها
     await sql`DELETE FROM applications WHERE id = ${appId}`;
 
     revalidatePath('/', 'layout');
