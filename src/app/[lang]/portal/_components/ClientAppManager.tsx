@@ -125,6 +125,29 @@ export default function ClientAppManager({
                 <TransactionTimeline status={app.status} progress={app.progress} lang={lang} />
               </div>
 
+              {/* 💳 كرت النفقات والرسوم الحكومية المباشر والشفاف للمستثمر */}
+              {app.fees && app.fees.length > 0 && (
+                <div className="mb-5 bg-emerald-50/40 border border-emerald-500/10 rounded-xl p-3.5 text-start w-full animate-fadeIn">
+                  <span className="text-[10px] sm:text-xs text-emerald-800/80 block font-black mb-2 flex items-center gap-1.5">
+                    💳 {lang === 'ar' ? 'الرسوم والنفقات الحكومية المعتمدة والمعالجة:' : 'Approved Government Fees & Charges:'}
+                  </span>
+                  <div className="space-y-2">
+                    {app.fees.map((fee: any) => (
+                      <div key={fee.id} className="flex justify-between items-center bg-white border border-emerald-500/5 p-2.5 rounded-lg text-xs font-semibold shadow-3xs">
+                        <span className="text-brand-navy-dark/80">{fee.description}</span>
+                        <span className="font-mono font-black text-emerald-600 bg-emerald-100/40 px-2 py-0.5 rounded">{fee.amount} AED</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 pt-2.5 border-t border-emerald-500/10 flex justify-between items-center text-xs font-black text-emerald-800 font-mono">
+                    <span>{lang === 'ar' ? 'الإجمالي الكلي المدفوع:' : 'Total Amount Paid:'}</span>
+                    <span className="text-sm bg-emerald-600 text-white px-2.5 py-0.5 rounded-lg">
+                      {app.fees.reduce((sum: number, f: any) => sum + f.amount, 0)} AED
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {app.notes && (
                 <div className="bg-brand-navy-dark/[0.015] border border-brand-navy-dark/[0.03] rounded-lg p-3 text-xs text-brand-navy-dark/80 mb-5 text-start w-full">
                   <span className="text-[10px] text-brand-navy-dark/40 block font-bold mb-1 text-start">{t.updateLabel}</span>

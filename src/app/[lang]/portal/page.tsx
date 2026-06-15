@@ -129,22 +129,31 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
       userData = { id: userRows[0].id, company_name: userRows[0].company_name };
     }
 
-    const rows = await sql`
-      SELECT 
-        a.id, a.service_type, a.status, a.progress, a.notes, a.updated_at, a.issued_document_url, u.company_name, u.name as user_name,
-        COALESCE(
-          (
-            SELECT json_agg(d.* ORDER BY d.created_at ASC)
-            FROM application_documents d
-            WHERE d.application_id = a.id
-          ),
-          '[]'::json
-        ) as documents
-      FROM applications a
-      JOIN users u ON a.user_id = u.id
-      WHERE u.email = ${userEmail}
-      ORDER BY a.updated_at DESC
-    ` as any[];
+const rows = await sql`
+  SELECT 
+    a.id, 
+    a.service_type, 
+    a.status, 
+    a.progress, 
+    a.notes, 
+    a.updated_at, 
+    a.issued_document_url, 
+    a.fees, -- 🌟 هذا هو التعديل السحري المطلوب لجلبه من الداتابيز
+    u.company_name, 
+    u.name as user_name,
+    COALESCE(
+      (
+        SELECT json_agg(d.* ORDER BY d.created_at ASC)
+        FROM application_documents d
+        WHERE d.application_id = a.id
+      ),
+      '[]'::json
+    ) as documents
+  FROM applications a
+  JOIN users u ON a.user_id = u.id
+  WHERE u.email = ${userEmail}
+  ORDER BY a.updated_at DESC
+` as any[];
 
     if (rows && rows.length > 0) {
       let blobToken: any = null;

@@ -271,3 +271,28 @@ export async function adminCreateApplication(data: { userId: string; serviceType
     return { success: false, error: 'Failed to create application' };
   }
 }
+
+export async function updateApplicationFees(appId: string, feesArray: any[]) {
+  try {
+    const feesJson = JSON.stringify(feesArray);
+    
+    // تحديث حقل الرسوم (يجب التأكد أن جدول applications يحتوي على حقل fees من نوع json أو jsonb أو text)
+    await sql`
+      UPDATE applications
+      SET 
+        fees = ${feesJson}::jsonb,
+        updated_at = NOW()
+      WHERE id = ${appId}
+    `;
+
+    // كسر الكاش القاطع لضمان البث الحي في بوابات العميل والأدمن فوراً
+    revalidatePath('/', 'layout');
+    revalidatePath('/[lang]/admin', 'page');
+    revalidatePath('/[lang]/portal', 'page');
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to update application fees in DB:', error);
+    return { success: false, error: error.message || 'Database fees update failed' };
+  }
+}
