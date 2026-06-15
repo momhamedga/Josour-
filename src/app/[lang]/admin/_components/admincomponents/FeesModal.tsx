@@ -5,7 +5,7 @@ import { useState } from 'react';
 interface FeesModalProps {
   activeFeesApp: any;
   setActiveFeesApp: (val: any) => void;
-  handleFieldChange: (id: string, field: string, value: any) => void;
+  handleFieldChange: (id: string, field: any, value: any) => void; // تأمين التوافق المطلق
   lang: 'ar' | 'en';
   t: any;
 }
