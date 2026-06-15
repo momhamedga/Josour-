@@ -17,11 +17,9 @@ interface PortalPageProps {
 }
 
 export default async function ClientPortalPage({ params }: PortalPageProps) {
-  // 1. فك الـ Params واللغة فوراً لمنع الـ Async Collisions
   const { lang } = await params;
   const isRtl = lang === 'ar';
 
-  // 2. التحقق الآمن والمباشر من الكوكيز للفرز السحابي
   const cookieStore = await cookies();
   const userEmail = cookieStore.get('user_email')?.value;
 
@@ -29,7 +27,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     redirect(`/${lang}/portal/login`);
   }
 
-  // 3. تأمين كتل التراجم والقواميس الثابتة والاحتياطية
   const dict = siteContent?.[lang] || siteContent?.ar || {};
 
   const translations = {
@@ -278,13 +275,31 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
       const nameAr = translation.ar;
       const nameEn = translation.en;
 
-      const existingDoc = app.documents?.find((d: any) => 
-        d && (d.document_name_ar === nameAr || 
-        d.document_name_en === nameEn ||
-        (d.id && String(d.id).includes(docKey)))
-      );
+      // 🌟 ترقية لُوجيك المطابقة الذكية لحل أزمة رخصة المنشأة نهائياً ومطابقتها بأكثر من وسيلة مرنة
+      const existingDoc = app.documents?.find((d: any) => {
+        if (!d) return false;
+        const dbNameAr = d.document_name_ar || '';
+        const dbNameEn = d.document_name_en || '';
+        const dbId = d.id ? String(d.id) : '';
+
+        // تطابق مباشر بالاسم أو الـ ID
+        if (dbNameAr === nameAr || dbNameEn === nameEn || dbId.includes(docKey)) return true;
+
+        // تأمين مطابقة ذكية إضافية للرخصة في حال اختلاف المسافات أو الرموز
+        if (docKey === 'trade_license' && (dbNameAr.includes('رخصة') || dbNameEn.toLowerCase().includes('license'))) return true;
+        if (docKey === 'corporate_papex' && (dbNameAr.includes('تأسيس') || dbNameAr.includes('سجل') || dbNameEn.toLowerCase().includes('association'))) return true;
+
+        return false;
+      });
       
-      if (existingDoc) return existingDoc;
+      if (existingDoc) {
+        // نضمن مزامنة الاسم المترجم ليعرض بشكل صحيح شاشات العميل
+        return {
+          ...existingDoc,
+          document_name_ar: nameAr,
+          document_name_en: nameEn
+        };
+      }
 
       return {
         id: `fallback-${app.id}-${docKey}-${i}`,
@@ -317,7 +332,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     <main className={`min-h-screen bg-brand-light-bg py-12 md:py-20 px-3 sm:px-6 lg:px-8 text-start ${isRtl ? 'font-cairo' : 'font-sans'}`} dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 w-full">
         
-        {/* شريط الأدوات العلوي وتسجيل الخروج الآمن */}
         <div className="flex items-center justify-between gap-2 bg-white/60 border border-brand-navy-dark/[0.04] p-2 rounded-xl backdrop-blur-xs w-full">
           <Link 
             href={`/${lang}`}
@@ -340,7 +354,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
           </form>
         </div>
 
-        {/* معلومات المستثمر والهيدر الإستراتيجي */}
         <div className="border-b border-brand-navy-dark/10 pb-5 sm:pb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
           <div className="text-start">
             <h1 className="text-xl sm:text-3xl font-black text-brand-navy-dark tracking-tight mb-1.5 text-start">{t.title}</h1>
@@ -354,7 +367,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
           )}
         </div>
 
-        {/* لوحة الإحصائيات الشاملة السريعة للبوابة الإستثمارية */}
         {processedApplications.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
             <div className="bg-white border border-brand-navy-dark/[0.05] rounded-xl p-3 shadow-2xs text-start">
@@ -384,7 +396,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
           </div>
         )}
 
-        {/* 🌟 استدعاء القائد التفاعلي الموحد ليتكفل بالريندر بمودال الحذف الأمني ومنع التكرار نهائياً */}
         {userData && (
           <ClientAppManager 
             userId={userData.id}
