@@ -1,12 +1,18 @@
 'use client';
 
-import { useState, useTransition, useMemo, useRef, useEffect } from 'react';
+import { useState, useTransition, useMemo, useEffect } from 'react';
 import { updateApplicationStatus, updateDocumentStatus } from '@/app/actions/admin';
 import { adminCreateApplication, adminDeleteApplication } from '@/app/actions/portal-actions';
 import UploadZone from './UploadZone';
 import UploadIssuedDoc from './UploadIssuedDoc'; 
 import Link from 'next/link';
 import ClientIdCopyButton from '../../portal/_components/ClientIdCopyButton';
+
+// استدعاء المكونات المفصولة حديثاً لزيادة سرعة الأداء وكفاءة الريندر
+import StatsCards from './admincomponents/StatsCards';
+import FilterBar from './admincomponents/FilterBar';
+import FeesModal from './admincomponents/FeesModal';
+import CreateAppModal from './admincomponents/CreateAppModal';
 
 interface DocumentItem {
   id: string;
@@ -62,18 +68,8 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
     return () => clearInterval(interval);
   }, []);
 
-  // 🌟 حالات التحكم في المودالات الحديثة والمطورة
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  
-  const [newAppForm, setNewAppForm] = useState({ 
-    userId: '', 
-    serviceType: 'investor_visa', // جعل القيمة الافتراضية مفتاحاً معلوماً للسيرفر لفرش الملفات
-    status: 'pending', 
-    progress: 0, 
-    notes: '', 
-    sla_hours_limit: 48 
-  });
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClient, setSelectedClient] = useState('all');
@@ -81,10 +77,7 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
   const [sortBy, setSortBy] = useState<'latest' | 'progress-asc' | 'progress-desc' | 'sla-risk'>('latest');
   const [expandedApps, setExpandedApps] = useState<Record<string, boolean>>({});
 
-  const [activeCanvasDoc, setActiveCanvasDoc] = useState<{appId: string, doc: DocumentItem} | null>(null);
   const [activeFeesApp, setActiveFeesApp] = useState<ApplicationItem | null>(null);
-  const [newFeeForm, setNewFeeForm] = useState({ description: '', amount: '' });
-
   const isRtl = lang === 'ar';
 
   const t = {
@@ -139,7 +132,7 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
       slaWarning: 'تحذير (شبه متجاوز)',
       slaViolated: 'مخترق (متأخر عن الوقت المطلوب)',
       feesBtn: '💳 الرسوم الحكومية',
-      interactiveRejectBtn: '🎨 رفض تفاعلي ورسم بصري',
+      interactiveRejectBtn: '🎨 الرفض البصري تفاعلي',
       aiGenerateBtn: '✨ صياغة ذكية بالـ AI',
       appIdLabel: 'رقم السجل التتبعي الموحد',
       serviceTypes: {
@@ -415,7 +408,6 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
     });
   };
 
-  // 🌟 دالة الحذف الحديثة المعتمدة على المودال المخصص
   const executeDeleteApp = async () => {
     if (!deleteTargetId) return;
     startTransition(async () => {
@@ -442,26 +434,20 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
     });
   };
 
-  // 🌟 دالة إنشاء المعاملة المصححة والمؤمنة 100% لـ Next.js 15 و SQL Schema
-  const handleCreateApplication = async () => {
-    if (!newAppForm.userId || !newAppForm.serviceType) {
-      return alert(lang === 'ar' ? 'الرجاء ملء الحقول الأساسية وتحديد المستثمر' : 'Please fill main fields and select an investor');
-    }
-    
+  const handleCreateApplication = async (formValues: any) => {
     startTransition(async () => {
-      // تمرير كائن متوافق ومنظم مع تعريف الـ Schema بالسيرفر
       const result = await adminCreateApplication({
-        userId: newAppForm.userId,
-        serviceType: newAppForm.serviceType,
-        status: newAppForm.status,
-        progress: Number(newAppForm.progress),
-        notes: newAppForm.notes,
-        sla_hours_limit: Number(newAppForm.sla_hours_limit) // الاسم الصحيح للعمود بالداتابيز
+        userId: formValues.userId,
+        serviceType: formValues.serviceType,
+        status: formValues.status,
+        progress: Number(formValues.progress),
+        notes: formValues.notes,
+        sla_hours_limit: Number(formValues.sla_hours_limit)
       } as any);
 
       if (result.success) {
         setIsCreateModalOpen(false);
-        window.location.reload(); // عمل تزامن فوري للصفحة بالكامل
+        window.location.reload();
       } else {
         alert(lang === 'ar' ? 'فشل إنشاء المعاملة، تأكد من البيانات' : 'Failed to create application');
       }
@@ -493,73 +479,23 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-brand-navy-dark/[0.06] rounded-2xl p-4 shadow-2xs text-start">
-          <span className="text-brand-navy-dark/40 text-[11px] font-bold block mb-1">{t.stats.totalApps}</span>
-          <span className="text-2xl font-black text-brand-navy-dark font-mono">{totalApps}</span>
-        </div>
-        <div className="bg-emerald-50/40 border border-emerald-500/10 rounded-2xl p-4 text-start">
-          <span className="text-emerald-700/60 text-[11px] font-bold block mb-1">{t.stats.approved}</span>
-          <span className="text-2xl font-black text-emerald-700 font-mono">{approvedLicenses}</span>
-        </div>
-        <div className="bg-amber-50/50 border border-amber-500/10 rounded-2xl p-4 text-start">
-          <span className="text-amber-700/60 text-[11px] font-bold block mb-1">{t.stats.pendingDocs}</span>
-          <span className="text-2xl font-black text-amber-600 font-mono">{pendingDocs}</span>
-        </div>
-        <div className="bg-rose-50/40 border border-rose-500/10 rounded-2xl p-4 text-start">
-          <span className="text-rose-700/60 text-[11px] font-bold block mb-1">{t.stats.rejectedDocs}</span>
-          <span className="text-2xl font-black text-rose-600 font-mono">{rejectedDocs}</span>
-        </div>
-      </div>
+      {/* Stats Cards مفصول ومحسن بالكامل الأداء حياً */}
+      <StatsCards 
+        totalApps={totalApps} 
+        approvedLicenses={approvedLicenses} 
+        pendingDocs={pendingDocs} 
+        rejectedDocs={rejectedDocs} 
+        t={t} 
+      />
 
-      {/* Filters */}
-      <div className="bg-white border border-brand-navy-dark/[0.08] rounded-2xl p-5 shadow-3xs space-y-4 text-start">
-        <span className="text-xs font-bold text-brand-gold tracking-wider uppercase block">{t.filterTitle}</span>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-bold">
-          <input
-            type="text"
-            placeholder={t.searchPlaceholder}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-brand-light-bg/60 border border-brand-navy-dark/10 rounded-xl px-4 py-2.5 text-brand-navy-dark focus:outline-none focus:border-brand-gold/50 font-semibold"
-          />
-
-          <select
-            value={selectedClient}
-            onChange={(e) => setSelectedClient(e.target.value)}
-            className="w-full bg-brand-light-bg/60 border border-brand-navy-dark/10 rounded-xl px-4 py-2.5 text-brand-navy-dark focus:outline-none cursor-pointer"
-          >
-            <option value="all">👥 {t.allClients}</option>
-            {uniqueClients.map(clientName => (
-              <option key={clientName} value={clientName}>{clientName}</option>
-            ))}
-          </select>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full bg-brand-light-bg/60 border border-brand-navy-dark/10 rounded-xl px-4 py-2.5 text-brand-navy-dark focus:outline-none cursor-pointer"
-          >
-            <option value="all">⚡ {t.allStatuses}</option>
-            {Object.entries(t.statuses).map(([key, label]) => (
-              <option key={key} value={key}>{label}</option>
-            ))}
-          </select>
-
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="w-full bg-brand-light-bg/60 border border-brand-navy-dark/10 rounded-xl px-4 py-2.5 text-brand-navy-dark focus:outline-none cursor-pointer"
-          >
-            <option value="latest">⏳ {t.sortOptions.latest}</option>
-            <option value="progress-asc">📈 {t.sortOptions.progressAsc}</option>
-            <option value="progress-desc">📉 {t.sortOptions.progressDesc}</option>
-            <option value="sla-risk">⚠️ {t.sortOptions.slaRisk}</option>
-          </select>
-        </div>
-      </div>
+      {/* Filter Bar مفصول ومؤمن Re-renders */}
+      <FilterBar 
+        searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+        selectedClient={selectedClient} setSelectedClient={setSelectedClient}
+        statusFilter={statusFilter} setStatusFilter={setStatusFilter}
+        sortBy={sortBy} setSortBy={setSortBy}
+        uniqueClients={uniqueClients} t={t}
+      />
 
       {/* Applications Cards */}
       <div className="grid grid-cols-1 gap-6 w-full">
@@ -574,7 +510,6 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
             const isExpanded = !!expandedApps[app.id];
             const sla = getSLAStatus(app);
             const totalFeesPaid = app.fees?.reduce((sum, f) => sum + f.amount, 0) || 0;
-
             const displayServiceTitle = (t.serviceTypes as any)[app.service_type] || app.service_type;
 
             return (
@@ -723,7 +658,7 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
 
                     <button
                       type="button"
-                      onClick={() => setDeleteTargetId(app.id)} // فتح مودال الحذف المطور
+                      onClick={() => setDeleteTargetId(app.id)}
                       className="text-[11px] sm:text-xs font-black text-rose-600 hover:text-white hover:bg-rose-600 bg-rose-50 px-3.5 py-2 rounded-xl border border-rose-200 transition-all cursor-pointer select-none"
                     >
                       🗑️ {t.deleteBtn}
@@ -851,132 +786,27 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
         )}
       </div>
 
-      {/* 💳 مودال إدارة الرسوم والمزامنة */}
-      {activeFeesApp && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 text-start border border-brand-navy-dark/10 shadow-xl">
-            <div className="flex justify-between items-center border-b pb-3 text-start">
-              <h3 className="font-black text-brand-navy-dark text-base sm:text-lg text-start">{t.feesBtn} - {activeFeesApp.company_name}</h3>
-              <button onClick={() => setActiveFeesApp(null)} className="text-gray-400 hover:text-black font-black cursor-pointer p-1">✕</button>
-            </div>
-            
-            <div className="max-h-60 overflow-y-auto space-y-2 text-start pr-1">
-              {activeFeesApp.fees && activeFeesApp.fees.length > 0 ? (
-                activeFeesApp.fees.map((fee) => {
-                  if (!fee) return null;
-                  return (
-                    <div key={fee.id} className="flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-gray-100 text-xs font-bold text-start">
-                      <span className="font-bold text-gray-700 text-start">{fee.description}</span>
-                      <span className="font-mono font-black text-emerald-600 text-start">{fee.amount} AED</span>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-xs text-gray-400 text-center py-4 w-full font-medium">{lang === 'ar' ? 'لا توجد رسوم حكومية مسجلة حالياً.' : 'No recorded fees yet.'}</p>
-              )}
-            </div>
+      {/* الرسوم والنفقات المودال المفصول */}
+      <FeesModal 
+        activeFeesApp={activeFeesApp} 
+        setActiveFeesApp={setActiveFeesApp} 
+        handleFieldChange={handleFieldChange} 
+        lang={lang} 
+        t={t} 
+      />
 
-            <div className="border-t pt-3 space-y-3 text-start text-xs font-bold">
-              <input 
-                type="text" placeholder={lang === 'ar' ? 'وصف الرسوم (مثال: رسوم اعتماد رخصة الغرفة)' : 'Fees description...'} 
-                value={newFeeForm.description}
-                onChange={(e) => setNewFeeForm({...newFeeForm, description: e.target.value})}
-                className="w-full bg-gray-50 border border-gray-200 p-2.5 rounded-xl text-start focus:outline-none focus:border-brand-gold/40 font-semibold"
-              />
-              <input 
-                type="number" placeholder={lang === 'ar' ? 'المبلغ الفعلي بالدرهم AED' : 'Amount in AED...'} 
-                value={newFeeForm.amount}
-                onChange={(e) => setNewFeeForm({...newFeeForm, amount: e.target.value})}
-                className="w-full bg-gray-50 border border-gray-200 p-2.5 rounded-xl text-start focus:outline-none focus:border-brand-gold/40 font-mono font-bold"
-              />
-              <button 
-                onClick={() => {
-                  if(!newFeeForm.description || !newFeeForm.amount) return;
-                  const updatedFees = [...(activeFeesApp.fees || []), { id: Date.now().toString(), description: newFeeForm.description, amount: parseFloat(newFeeForm.amount) }];
-                  handleFieldChange(activeFeesApp.id, 'fees', updatedFees);
-                  setNewFeeForm({ description: '', amount: '' });
-                }}
-                className="w-full bg-emerald-600 text-white font-black p-2.5 rounded-xl hover:bg-emerald-700 cursor-pointer select-none transition-colors"
-              >
-                {lang === 'ar' ? '＋ إضافة الرسوم والمزامنة الحية' : '＋ Add Gov Fee'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* إنشاء معاملة جديدة المودال المفصول والمؤمن */}
+      <CreateAppModal 
+        isOpen={isCreateModalOpen} 
+        setIsOpen={setIsCreateModalOpen} 
+        allUsersList={allUsersList} 
+        handleCreate={handleCreateApplication} 
+        isPending={isPending} 
+        lang={lang} 
+        t={t} 
+      />
 
-      {/* ➕ مودال إنشاء معاملة جديدة للآدمن (مصحح الهيكلية بالكامل) */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 text-start border border-brand-navy-dark/10 shadow-xl">
-            <div className="flex justify-between items-center border-b pb-3 text-start">
-              <h3 className="font-black text-brand-navy-dark text-base sm:text-lg text-start">{t.modalCreateTitle}</h3>
-              <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-400 hover:text-black font-black cursor-pointer p-1">✕</button>
-            </div>
-            
-            <div className="space-y-3 text-xs font-bold text-start">
-              <div className="text-start">
-                <label className="block mb-1 font-black text-start">{t.selectUser}</label>
-                <select 
-                  className="w-full border p-2.5 rounded-xl bg-gray-50 text-start cursor-pointer font-semibold focus:outline-none"
-                  value={newAppForm.userId}
-                  onChange={(e) => setNewAppForm({ ...newAppForm, userId: e.target.value })}
-                >
-                  <option value="">-- {lang === 'ar' ? 'اختر مستثمر لتخصيص المعاملة' : 'Select investor'} --</option>
-                  {allUsersList.map(u => {
-                    if (!u) return null;
-                    return <option key={u.id} value={u.id}>{u.name} ({u.company_name})</option>;
-                  })}
-                </select>
-              </div>
-
-              <div className="text-start">
-                <label className="block mb-1 font-black text-start">{lang === 'ar' ? 'نوع الخدمة / الرخصة المطلوبة لفرش الوثائق' : 'Service Tracking Segment'}</label>
-                <select
-                  className="w-full border p-2.5 rounded-xl bg-gray-50 text-start cursor-pointer font-semibold focus:outline-none"
-                  value={newAppForm.serviceType}
-                  onChange={(e) => setNewAppForm({ ...newAppForm, serviceType: e.target.value })}
-                >
-                  {Object.entries(t.serviceTypes).map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="text-start">
-                <label className="block mb-1 font-black text-start">{lang === 'ar' ? 'الحد الأقصى للـ SLA (بالساعات الميلادية)' : 'SLA Target Limit (Hours)'}</label>
-                <input 
-                  type="number" 
-                  value={newAppForm.sla_hours_limit}
-                  onChange={(e) => setNewAppForm({ ...newAppForm, sla_hours_limit: parseInt(e.target.value) || 48 })}
-                  className="w-full border p-2.5 rounded-xl bg-gray-50 text-start focus:outline-none font-bold font-mono"
-                />
-              </div>
-
-              <div className="text-start">
-                <label className="block mb-1 font-black text-start">{t.notesLabel}</label>
-                <textarea 
-                  rows={2}
-                  placeholder={t.notesPlaceholder}
-                  value={newAppForm.notes}
-                  onChange={(e) => setNewAppForm({ ...newAppForm, notes: e.target.value })}
-                  className="w-full border p-2.5 rounded-xl bg-gray-50 text-start focus:outline-none font-semibold resize-none"
-                />
-              </div>
-
-              <button 
-                onClick={handleCreateApplication}
-                disabled={isPending}
-                className="w-full bg-brand-navy-dark text-white font-black p-3 rounded-xl mt-2 hover:bg-brand-navy-light cursor-pointer select-none transition-colors"
-              >
-                {isPending ? t.saving : t.createNewBtn}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 🗑️ مودال الحذف الاحترافي والمطور (بديل الـ window.confirm التقليدي) */}
+      {/* 🗑️ مودال الحذف الاحترافي والمطور البصري المخصص */}
       {deleteTargetId && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start animate-fadeIn">
           <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 text-start border border-brand-navy-dark/10 shadow-xl animate-scaleUp">
