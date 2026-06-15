@@ -52,20 +52,28 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
   const [isPending, startTransition] = useTransition();
   const [successId, setSuccessId] = useState<string | null>(null);
 
-  // تحديث البيانات حياً عند تغيير الـ props القادمة من السيرفر
   useEffect(() => {
     setApps(initialApplications);
   }, [initialApplications]);
 
-  // مؤقت لتحديث حسابات الـ SLA حياً كل 60 ثانية بدون إعادة تحميل الصفحة
   const [timeTicker, setTimeTicker] = useState(Date.now());
   useEffect(() => {
     const interval = setInterval(() => setTimeTicker(Date.now()), 60000);
     return () => clearInterval(interval);
   }, []);
 
+  // 🌟 حالات التحكم في المودالات الحديثة والمطورة
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newAppForm, setNewAppForm] = useState({ userId: '', serviceType: '', status: 'pending', progress: 0, notes: '', slaLimit: 48 });
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  
+  const [newAppForm, setNewAppForm] = useState({ 
+    userId: '', 
+    serviceType: 'investor_visa', // جعل القيمة الافتراضية مفتاحاً معلوماً للسيرفر لفرش الملفات
+    status: 'pending', 
+    progress: 0, 
+    notes: '', 
+    sla_hours_limit: 48 
+  });
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClient, setSelectedClient] = useState('all');
@@ -77,7 +85,6 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
   const [activeFeesApp, setActiveFeesApp] = useState<ApplicationItem | null>(null);
   const [newFeeForm, setNewFeeForm] = useState({ description: '', amount: '' });
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isRtl = lang === 'ar';
 
   const t = {
@@ -107,7 +114,7 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
       statusLabel: 'حالة المعاملة الحالية',
       progressLabel: 'نسبة الإنجاز الفعلي:',
       notesLabel: 'ملاحظات المستشار الإداري (تظهر للمستثمر لايف)',
-      notesPlaceholder: 'اكتب هنا آخر المستجدات والخطوات القادمة للمستثمر...',
+      notesPlaceholder: 'اكتب هنا آخر مستجدات خطة القيمة المضافة للمستثمر...',
       saveBtn: 'تحديث وبث البيانات لايف',
       saving: 'جاري المعالجة والبث اللحظي...',
       successAlert: 'تم بث التحديثات بنجاح! ✨',
@@ -119,7 +126,10 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
       hideDocs: 'إخفاء وثائق المعاملة',
       noResults: 'لم يتم العثور على أي معاملات تطابق خيارات التصفية الحالية.',
       deleteBtn: 'حذف المعاملة نهائياً',
-      confirmDelete: 'هل أنت متأكد من حذف هذه المعاملة وجميع وثائقها نهائياً؟ لا يمكن التراجع عن هذا الإجراء.',
+      confirmDeleteTitle: 'تأكيد الحذف الأمني للحساب',
+      confirmDeleteDesc: 'هل أنت متأكد تماماً من رغبتك في حذف هذه المعاملة؟ سيؤدي هذا الإجراء لإزالة جميع الوثائق والملفات المرفوعة المرتبطة بها نهائياً من سحابة النظام ولا يمكن التراجع عنه.',
+      cancel: 'إلغاء الأمر',
+      confirm: 'نعم، احذف نهائياً',
       createNewBtn: '➕ إنشاء معاملة جديدة للآدمن',
       modalCreateTitle: 'إنشاء معاملة جديدة فورية مع تحديد حد الـ SLA',
       selectUser: 'اختر المستثمر / العميل المطلوب',
@@ -132,6 +142,12 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
       interactiveRejectBtn: '🎨 رفض تفاعلي ورسم بصري',
       aiGenerateBtn: '✨ صياغة ذكية بالـ AI',
       appIdLabel: 'رقم السجل التتبعي الموحد',
+      serviceTypes: {
+        investor_visa: 'تأشيرة مستثمر / إقامة منشأة',
+        government_services: 'الخدمات والعلاقات الحكومية الموحدة',
+        icv_certificates: 'شهادات وبرامج القيمة الوطنية المضافة',
+        real_estate_services: 'الخدمات والاستشارات العقارية الفاخرة'
+      },
       statuses: {
         pending: 'قيد الانتظار',
         in_progress: 'جاري المعالجة',
@@ -182,7 +198,10 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
       hideDocs: 'Hide Application Documents',
       noResults: 'No applications found matching the current criteria.',
       deleteBtn: 'Delete Permanently',
-      confirmDelete: 'Are you sure you want to permanently delete this application and all its documents? This cannot be undone.',
+      confirmDeleteTitle: 'Confirm Secure Deletion',
+      confirmDeleteDesc: 'Are you sure you want to permanently delete this application? This action will completely erase the application data and all its associated documents from the storage servers. This action cannot be undone.',
+      cancel: 'Cancel',
+      confirm: 'Yes, Delete Permanently',
       createNewBtn: '➕ Create New Application',
       modalCreateTitle: 'Create New Instant Application with SLA Config',
       selectUser: 'Select Targeted Investor / Client',
@@ -195,6 +214,12 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
       interactiveRejectBtn: '🎨 Visual Feedback Builder',
       aiGenerateBtn: '✨ AI Smart Rewrite',
       appIdLabel: 'Unified Registry Key',
+      serviceTypes: {
+        investor_visa: 'Investor Visa & Golden Residency',
+        government_services: 'Unified Corporate Government Services',
+        icv_certificates: 'In-Country Value (ICV) Certificates',
+        real_estate_services: 'Premium Real Estate Advisory Services'
+      },
       statuses: {
         pending: 'Pending',
         in_progress: 'In Progress',
@@ -209,7 +234,6 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
     }
   }[lang];
 
-  // 📝 قاموس التراجم والمطابقة للمستندات المختلفة لضمان ديناميكية العد
   const docTranslations: Record<string, { ar: string; en: string }> = {
     passport: { ar: 'صورة جواز السفر الساري', en: 'Valid Passport Copy' },
     corporate_papex: { ar: 'عقد التأسيس أو السجل التجاري', en: 'Memorandum of Association' },
@@ -235,14 +259,12 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
   };
 
   const uniqueClients = useMemo(() => {
-    const names = initialApplications.map(a => a.name);
+    const names = initialApplications.map(a => a.name).filter(Boolean);
     return Array.from(new Set(names));
   }, [initialApplications]);
 
-  // 🚀 الهندسة الفورية لفرش المستندات وحساب الإحصائيات الفوقية حياً وتلقائياً
   const processedApps = useMemo(() => {
     return apps.map((app) => {
-      // استنتاج مفاتيح المستندات بناءً على نوع الخدمة لمنع سقوط العداد
       let fallbackDocsKeys: string[] = [];
       switch (app.service_type) {
         case 'government_services':
@@ -262,7 +284,6 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
           break;
       }
 
-      // دمج مصفوفة المستندات الحالية مع النواقص والـ Fallbacks لتعمل الحسابات بدقة لايف
       const fullDocsList = fallbackDocsKeys.map((docKey, i) => {
         const translation = docTranslations[docKey] || { ar: docKey, en: docKey };
         const nameAr = translation.ar;
@@ -299,10 +320,10 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
     if (searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase();
       result = result.filter(app => 
-        app.name.toLowerCase().includes(query) ||
-        app.company_name.toLowerCase().includes(query) ||
-        app.id.toLowerCase().includes(query) ||
-        app.service_type.toLowerCase().includes(query)
+        (app.name && app.name.toLowerCase().includes(query)) ||
+        (app.company_name && app.company_name.toLowerCase().includes(query)) ||
+        (app.id && app.id.toLowerCase().includes(query)) ||
+        (app.service_type && app.service_type.toLowerCase().includes(query))
       );
     }
 
@@ -331,16 +352,13 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
     return result;
   }, [processedApps, searchQuery, selectedClient, statusFilter, sortBy, timeTicker]);
 
-  // 📊 تعديل الحسابات الفوقية لتصبح حية ومطابقة لواقع المستندات الفريدة لكل خدمة
   const totalApps = apps.length;
   const approvedLicenses = apps.filter(a => a.status === 'approved').length;
   
-  // وثائق معلقة = المستندات التي لم ترفع بعد أو قيد الانتظار الفعلي ومرفوعة حالياً
   const pendingDocs = processedApps.reduce((acc, app) => 
     acc + (app.documents?.filter(d => d.status === 'pending').length || 0), 0
   );
   
-  // وثائق مرفوضة = الحالات المرفوضة من قبل الإداري وتنتظر تعديلاً لايف من المستثمر
   const rejectedDocs = processedApps.reduce((acc, app) => 
     acc + (app.documents?.filter(d => d.status === 'rejected').length || 0), 0
   );
@@ -353,7 +371,6 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
     setApps(prev => prev.map(app => {
       if (app.id !== appId) return app;
       
-      // تأمين وجود مصفوفة وثائق لضمان التحديث اللحظي داخل السيرفر والواجهة
       const currentDocs = app.documents && app.documents.length > 0 
         ? app.documents 
         : (processedApps.find(p => p.id === appId)?.documents || []);
@@ -372,11 +389,11 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
   const handleAIGenerateResponse = (appId: string, docId: string, currentReason: string | null) => {
     const reasonToProcess = currentReason && currentReason.trim() !== '' 
       ? currentReason 
-      : (lang === 'ar' ? 'عدم وضوح المرفق أو نقص المستندات الثبوتية المطلوبة' : 'unclear document attachment or missing secondary credentials');
+      : (lang === 'ar' ? 'عدم وضوح المرفق أو نقص المستندات الثبوتية المطلوبة' : 'unclear document attachment or missing credentials');
 
     const standardLegalPhrasing = lang === 'ar' 
       ? `نود إفادتكم بأنه بعد مراجعة دقيقة للوثيقة المرفوعة، تبين وجود عدم تطابق رسمي متمثل في (${reasonToProcess}). يرجى إعادة رفع نسخة واضحة ومحدثة تجنباً لإلغاء طلب الترخيص.`
-      : `Our dynamic review indicated a non-compliance regarding (${reasonToProcess}). Please update and upload a clear valid copy to comply with regulatory affairs standards.`;
+      : `Our dynamic review indicated a non-compliance regarding (${reasonToProcess}). Please update and upload a clear valid copy to comply with regulatory standards.`;
     
     handleDocFieldChange(appId, docId, 'rejection_reason', standardLegalPhrasing);
   };
@@ -398,12 +415,14 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
     });
   };
 
-  const handleDeleteApp = async (id: string) => {
-    if (!window.confirm(t.confirmDelete)) return;
+  // 🌟 دالة الحذف الحديثة المعتمدة على المودال المخصص
+  const executeDeleteApp = async () => {
+    if (!deleteTargetId) return;
     startTransition(async () => {
-      const result = await adminDeleteApplication(id);
+      const result = await adminDeleteApplication(deleteTargetId);
       if (result.success) {
-        setApps(prev => prev.filter(app => app.id !== id));
+        setApps(prev => prev.filter(app => app.id !== deleteTargetId));
+        setDeleteTargetId(null);
       }
     });
   };
@@ -423,14 +442,28 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
     });
   };
 
+  // 🌟 دالة إنشاء المعاملة المصححة والمؤمنة 100% لـ Next.js 15 و SQL Schema
   const handleCreateApplication = async () => {
-    if (!newAppForm.userId || !newAppForm.serviceType) return alert(lang === 'ar' ? 'الرجاء ملء الحقول الأساسية' : 'Please fill main fields');
+    if (!newAppForm.userId || !newAppForm.serviceType) {
+      return alert(lang === 'ar' ? 'الرجاء ملء الحقول الأساسية وتحديد المستثمر' : 'Please fill main fields and select an investor');
+    }
+    
     startTransition(async () => {
-      const result = await adminCreateApplication(newAppForm);
+      // تمرير كائن متوافق ومنظم مع تعريف الـ Schema بالسيرفر
+      const result = await adminCreateApplication({
+        userId: newAppForm.userId,
+        serviceType: newAppForm.serviceType,
+        status: newAppForm.status,
+        progress: Number(newAppForm.progress),
+        notes: newAppForm.notes,
+        sla_hours_limit: Number(newAppForm.sla_hours_limit) // الاسم الصحيح للعمود بالداتابيز
+      } as any);
+
       if (result.success) {
-        alert(t.createSuccess);
         setIsCreateModalOpen(false);
-        window.location.reload();
+        window.location.reload(); // عمل تزامن فوري للصفحة بالكامل
+      } else {
+        alert(lang === 'ar' ? 'فشل إنشاء المعاملة، تأكد من البيانات' : 'Failed to create application');
       }
     });
   };
@@ -449,34 +482,34 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
       {/* Header */}
       <div className="border-b border-brand-navy-dark/10 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-brand-navy-dark tracking-tight mb-2">{t.title}</h1>
-          <p className="text-brand-navy-dark/60 text-sm md:text-base">{t.subtitle}</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-brand-navy-dark tracking-tight mb-2 text-start">{t.title}</h1>
+          <p className="text-brand-navy-dark/60 text-xs sm:text-sm text-start">{t.subtitle}</p>
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-brand-gold hover:bg-brand-gold-hover text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md transition-all cursor-pointer"
+          className="bg-brand-gold hover:bg-brand-gold-hover text-white text-xs font-black px-5 py-3 rounded-xl shadow-md transition-all cursor-pointer select-none"
         >
           {t.createNewBtn}
         </button>
       </div>
 
-      {/* Stats Cards - الحساب الحي المطلق الشغال 100% الآن */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-brand-navy-dark/[0.06] rounded-2xl p-4 shadow-2xs text-start">
           <span className="text-brand-navy-dark/40 text-[11px] font-bold block mb-1">{t.stats.totalApps}</span>
-          <span className="text-2xl font-bold text-brand-navy-dark">{totalApps}</span>
+          <span className="text-2xl font-black text-brand-navy-dark font-mono">{totalApps}</span>
         </div>
         <div className="bg-emerald-50/40 border border-emerald-500/10 rounded-2xl p-4 text-start">
           <span className="text-emerald-700/60 text-[11px] font-bold block mb-1">{t.stats.approved}</span>
-          <span className="text-2xl font-bold text-emerald-700">{approvedLicenses}</span>
+          <span className="text-2xl font-black text-emerald-700 font-mono">{approvedLicenses}</span>
         </div>
         <div className="bg-amber-50/50 border border-amber-500/10 rounded-2xl p-4 text-start">
           <span className="text-amber-700/60 text-[11px] font-bold block mb-1">{t.stats.pendingDocs}</span>
-          <span className="text-2xl font-bold text-brand-warning-color text-amber-600">{pendingDocs}</span>
+          <span className="text-2xl font-black text-amber-600 font-mono">{pendingDocs}</span>
         </div>
         <div className="bg-rose-50/40 border border-rose-500/10 rounded-2xl p-4 text-start">
           <span className="text-rose-700/60 text-[11px] font-bold block mb-1">{t.stats.rejectedDocs}</span>
-          <span className="text-2xl font-bold text-rose-600">{rejectedDocs}</span>
+          <span className="text-2xl font-black text-rose-600 font-mono">{rejectedDocs}</span>
         </div>
       </div>
 
@@ -484,13 +517,13 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
       <div className="bg-white border border-brand-navy-dark/[0.08] rounded-2xl p-5 shadow-3xs space-y-4 text-start">
         <span className="text-xs font-bold text-brand-gold tracking-wider uppercase block">{t.filterTitle}</span>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-medium">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-bold">
           <input
             type="text"
             placeholder={t.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-brand-light-bg/60 border border-brand-navy-dark/10 rounded-xl px-4 py-2.5 text-brand-navy-dark focus:outline-none focus:border-brand-gold/50"
+            className="w-full bg-brand-light-bg/60 border border-brand-navy-dark/10 rounded-xl px-4 py-2.5 text-brand-navy-dark focus:outline-none focus:border-brand-gold/50 font-semibold"
           />
 
           <select
@@ -529,69 +562,64 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
       </div>
 
       {/* Applications Cards */}
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-6 w-full">
         {filteredApps.length === 0 ? (
-          <div className="text-center py-16 bg-white border border-brand-navy-dark/5 rounded-2xl p-6">
+          <div className="text-center py-16 bg-white border border-brand-navy-dark/5 rounded-2xl p-6 w-full">
             <p className="text-brand-navy-dark/40 text-sm font-medium">{t.noResults}</p>
           </div>
         ) : (
           filteredApps.map((app) => {
+            if (!app) return null;
             const currentColors = statusSelectColors[app.status] || statusSelectColors.pending;
             const isExpanded = !!expandedApps[app.id];
             const sla = getSLAStatus(app);
             const totalFeesPaid = app.fees?.reduce((sum, f) => sum + f.amount, 0) || 0;
 
+            const displayServiceTitle = (t.serviceTypes as any)[app.service_type] || app.service_type;
+
             return (
-              <div key={app.id} className="bg-white border border-brand-navy-dark/[0.08] rounded-2xl p-6 md:p-8 shadow-xs relative overflow-hidden group text-start">
+              <div key={app.id} className="bg-white border border-brand-navy-dark/[0.08] rounded-2xl p-4 sm:p-7 shadow-2xs relative overflow-hidden text-start w-full group">
                 <div className="absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-brand-gold via-brand-gold-hover to-brand-gold" />
                 
-                {/* البادج المطور لعرض الـ ID */}
                 <div className="mb-4 bg-brand-navy-dark/[0.02] px-4 py-3 rounded-xl border border-brand-navy-dark/[0.05] flex items-center justify-between gap-4 flex-wrap text-start">
-                  <div className="flex items-center gap-2 text-[11px] md:text-xs font-bold text-brand-navy-dark/60 text-start">
-                    <span className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-brand-navy-dark/60 text-start">
+                    <span className="flex items-center gap-1.5 shrink-0">
                       <span className="w-1.5 h-1.5 bg-brand-gold rounded-full" />
                       {t.appIdLabel}:
                     </span>
-                    <span className="text-brand-navy-dark font-extrabold tracking-widest bg-white border border-brand-navy-dark/5 px-2.5 py-1 rounded-lg uppercase shadow-3xs select-all">
+                    <span className="text-brand-navy-dark font-mono font-black tracking-wider bg-white border border-brand-navy-dark/5 px-2 py-0.5 rounded shadow-3xs uppercase select-all">
                       {app.id.slice(0, 5)}...{app.id.slice(-5)}
                     </span>
                   </div>
                   <ClientIdCopyButton id={app.id} lang={lang} />
                 </div>
 
-                <div className="mb-4 flex flex-wrap justify-between items-center bg-brand-light-bg/80 px-4 py-2 rounded-xl border border-brand-navy-dark/[0.04] gap-3 text-start">
-                  <div className="flex items-center gap-2 text-xs font-bold text-start">
+                <div className="mb-4 flex flex-wrap justify-between items-center bg-brand-light-bg/80 px-4 py-2.5 rounded-xl border border-brand-navy-dark/[0.04] gap-3 text-start text-xs font-bold w-full">
+                  <div className="flex items-center gap-2 text-start">
                     <span className="text-brand-navy-dark/60">{t.slaBadge}</span>
-                    <span className={`inline-block w-2.5 h-2.5 rounded-full ${sla.color}`} />
+                    <span className={`inline-block w-2 h-2 rounded-full ${sla.color}`} />
                     <span className={sla.text}>{sla.label} ({app.sla_hours_limit || 48}h Limit)</span>
                   </div>
-                  <div className="text-xs font-bold text-brand-navy-dark text-start">
-                    💰 {lang === 'ar' ? 'إجمالي النفقات الحكومية:' : 'Total Gov Fees:'} <span className="text-emerald-600 font-bold">{totalFeesPaid} AED</span>
+                  <div className="text-brand-navy-dark text-start font-mono">
+                    💰 {lang === 'ar' ? 'إجمالي النفقات:' : 'Total Gov Fees:'} <span className="text-emerald-600 font-black">{totalFeesPaid} AED</span>
                   </div>
                 </div>
 
-                {/* Client Info */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-b border-brand-navy-dark/[0.06] pb-4 mb-6 text-sm text-start">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-b border-brand-navy-dark/[0.06] pb-4 mb-6 text-xs sm:text-sm text-start">
                   <div className="text-start">
-                    <span className="text-brand-navy-dark/40 block text-xs mb-0.5">{t.clientName}</span>
-                    <span className="font-bold text-brand-navy-dark">{app.name}</span>
+                    <span className="text-brand-navy-dark/40 block text-[10px] sm:text-xs font-bold mb-0.5">{t.clientName}</span>
+                    <span className="font-black text-brand-navy-dark">{app.name}</span>
                   </div>
                   <div className="text-start">
-                    <span className="text-brand-navy-dark/40 block text-xs mb-0.5">{t.company}</span>
-                    <span className="font-bold text-brand-navy-dark">{app.company_name}</span>
+                    <span className="text-brand-navy-dark/40 block text-[10px] sm:text-xs font-bold mb-0.5">{t.company}</span>
+                    <span className="font-black text-brand-navy-dark">{app.company_name}</span>
                   </div>
                   <div className="text-start">
-                    <span className="text-brand-navy-dark/40 block text-xs mb-0.5">{t.service}</span>
-                    <input
-                      type="text"
-                      value={app.service_type}
-                      onChange={(e) => handleFieldChange(app.id, 'service_type', e.target.value)}
-                      className="font-bold text-brand-gold border-b border-dashed border-brand-gold/30 focus:outline-none focus:border-brand-gold bg-transparent text-xs w-full text-start"
-                    />
+                    <span className="text-brand-navy-dark/40 block text-[10px] sm:text-xs font-bold mb-0.5">{t.service}</span>
+                    <span className="font-black text-brand-gold block truncate">{displayServiceTitle}</span>
                   </div>
                 </div>
 
-                {/* Status & Progress */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mb-6 text-start">
                   <div className="space-y-4 text-start">
                     <div className="text-start">
@@ -599,17 +627,17 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
                       <select
                         value={app.status}
                         onChange={(e) => handleFieldChange(app.id, 'status', e.target.value as any)}
-                        className={`w-full border border-brand-navy-dark/10 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none cursor-pointer ${currentColors}`}
+                        className={`w-full border border-brand-navy-dark/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-black focus:outline-none cursor-pointer tracking-wide ${currentColors}`}
                       >
                         {Object.entries(t.statuses).map(([key, label]) => (
-                          <option key={key} value={key} className="bg-white text-brand-navy-dark">{label}</option>
+                          <option key={key} value={key} className="bg-white text-brand-navy-dark font-bold">{label}</option>
                         ))}
                       </select>
                     </div>
                     <div className="text-start">
-                      <div className="flex justify-between items-center mb-2">
-                        <label className="text-xs font-bold text-brand-navy-dark/70">{t.progressLabel}</label>
-                        <span className="text-sm font-bold text-brand-navy-dark bg-brand-navy-dark/5 px-2 py-0.5 rounded-md">{app.progress}%</span>
+                      <div className="flex justify-between items-center mb-2 text-xs font-bold">
+                        <label className="text-brand-navy-dark/70">{t.progressLabel}</label>
+                        <span className="text-brand-navy-dark bg-brand-navy-dark/5 px-2 py-0.5 rounded-md font-mono">{app.progress}%</span>
                       </div>
                       <input
                         type="range" min="0" max="100" value={app.progress}
@@ -625,20 +653,19 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
                       rows={3} value={app.notes || ''}
                       onChange={(e) => handleFieldChange(app.id, 'notes', e.target.value)}
                       placeholder={t.notesPlaceholder}
-                      className="w-full bg-brand-light-bg border border-brand-navy-dark/10 rounded-xl p-4 text-sm text-brand-navy-dark focus:outline-none resize-none font-medium text-start"
+                      className="w-full bg-brand-light-bg border border-brand-navy-dark/10 rounded-xl p-3 sm:p-4 text-xs sm:text-sm text-brand-navy-dark focus:outline-none resize-none font-semibold text-start leading-relaxed"
                     />
                   </div>
                 </div>
 
-                {/* Final Doc Zone */}
-                <div className="bg-emerald-50/40 border border-emerald-500/10 rounded-2xl p-4 md:p-6 mb-6 space-y-3 text-start">
-                  <h4 className="text-xs font-bold text-emerald-800 flex items-center gap-1.5 text-start">
+                <div className="bg-emerald-50/40 border border-emerald-500/10 rounded-2xl p-4 sm:p-5 mb-6 space-y-3 text-start">
+                  <h4 className="text-xs font-black text-emerald-800 flex items-center gap-1.5 text-start">
                     {t.finalDocTitle}
                   </h4>
-                  <p className="text-brand-navy-dark/60 text-[11px] font-medium text-start">{t.finalDocDesc}</p>
+                  <p className="text-brand-navy-dark/60 text-[10px] sm:text-xs font-semibold text-start leading-relaxed">{t.finalDocDesc}</p>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center text-start">
-                    <div className="text-start">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 text-start w-full">
+                    <div className="text-start w-full sm:w-auto">
                       <UploadIssuedDoc 
                         appId={app.id}
                         currentUrl={app.issued_document_url ?? null}
@@ -656,11 +683,11 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
                       />
                     </div>
                     {app.issued_document_url && (
-                      <div className="text-xs font-semibold text-start">
+                      <div className="text-xs font-bold text-start shrink-0">
                         <Link 
                           href={`/api/view-doc?url=${encodeURIComponent(app.issued_document_url)}`} 
                           target="_blank" 
-                          className="text-emerald-700 hover:underline flex items-center gap-1 bg-white border border-emerald-200 px-3 py-2 rounded-xl w-max shadow-3xs cursor-pointer"
+                          className="text-emerald-700 hover:underline flex items-center gap-1 bg-white border border-emerald-200 px-3 py-2 rounded-xl shadow-3xs cursor-pointer"
                         >
                           {t.previewFinalDoc}
                         </Link>
@@ -669,11 +696,10 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
                   </div>
                 </div>
 
-                {/* Card Actions */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-navy-dark/[0.04] pb-6 mb-6 text-start">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-navy-dark/[0.04] pb-6 mb-6 text-start w-full">
                   <div className="flex items-center gap-2 flex-wrap text-start">
                     {successId === app.id && (
-                      <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">
+                      <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100 animate-fadeIn">
                         {t.successAlert}
                       </span>
                     )}
@@ -681,7 +707,7 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
                     <button
                       type="button"
                       onClick={() => toggleExpand(app.id)}
-                      className="text-xs font-bold text-brand-navy-dark/60 hover:text-brand-navy-dark bg-brand-light-bg px-4 py-2.5 rounded-xl border border-brand-navy-dark/10 transition-colors flex items-center gap-1.5 cursor-pointer"
+                      className="text-[11px] sm:text-xs font-black text-brand-navy-dark/70 hover:text-brand-navy-dark bg-brand-light-bg px-3.5 py-2 rounded-xl border border-brand-navy-dark/10 transition-colors flex items-center gap-1 cursor-pointer select-none"
                     >
                       <span>{isExpanded ? '🔼' : '📂'}</span>
                       {isExpanded ? t.hideDocs : `${t.showDocs} (${app.documents?.length || 0})`}
@@ -690,15 +716,15 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
                     <button
                       type="button"
                       onClick={() => setActiveFeesApp(app)}
-                      className="text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-4 py-2.5 rounded-xl border border-emerald-200 transition-all cursor-pointer"
+                      className="text-[11px] sm:text-xs font-black text-emerald-700 bg-emerald-50/60 hover:bg-emerald-100 px-3.5 py-2 rounded-xl border border-emerald-200 transition-all cursor-pointer select-none"
                     >
                       {t.feesBtn} ({app.fees?.length || 0})
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => handleDeleteApp(app.id)}
-                      className="text-xs font-bold text-rose-600 hover:text-white hover:bg-rose-600 bg-rose-50 px-4 py-2.5 rounded-xl border border-rose-200 transition-all cursor-pointer"
+                      onClick={() => setDeleteTargetId(app.id)} // فتح مودال الحذف المطور
+                      className="text-[11px] sm:text-xs font-black text-rose-600 hover:text-white hover:bg-rose-600 bg-rose-50 px-3.5 py-2 rounded-xl border border-rose-200 transition-all cursor-pointer select-none"
                     >
                       🗑️ {t.deleteBtn}
                     </button>
@@ -707,38 +733,38 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
                   <button 
                     onClick={() => handleUpdate(app)} 
                     disabled={isPending} 
-                    className="w-full sm:w-auto bg-brand-navy-dark text-white hover:bg-brand-navy-light font-bold text-xs px-5 py-2.5 rounded-xl cursor-pointer disabled:opacity-50"
+                    className="w-full sm:w-auto bg-brand-navy-dark hover:bg-brand-navy-light text-white font-black text-xs px-6 py-2.5 rounded-xl cursor-pointer disabled:opacity-50 select-none transition-colors"
                   >
                     {isPending ? t.saving : t.saveBtn}
                   </button>
                 </div>
 
-                {/* Documents Expand Area */}
                 {app.documents && app.documents.length > 0 && isExpanded && (
-                  <div className="bg-brand-light-bg/40 border border-brand-navy-dark/[0.04] rounded-xl p-4 md:p-6 space-y-4 text-start">
-                    <h3 className="text-sm font-bold text-brand-navy-dark flex items-center gap-2 text-start">
-                      <span className="w-1.5 h-3 bg-brand-gold rounded-full inline-block" />
+                  <div className="bg-brand-light-bg/40 border border-brand-navy-dark/[0.04] rounded-xl p-3 sm:p-5 space-y-4 text-start animate-fadeIn w-full">
+                    <h3 className="text-xs sm:text-sm font-black text-brand-navy-dark flex items-center gap-1.5 text-start">
+                      <span className="w-1 h-2.5 bg-brand-gold rounded-full inline-block" />
                       {t.docsTitle}
                     </h3>
                     
-                    <div className="space-y-4 text-start">
+                    <div className="space-y-3 text-start w-full">
                       {app.documents.map((doc) => {
+                        if (!doc) return null;
                         const docName = lang === 'ar' ? doc.document_name_ar : doc.document_name_en;
                         const secureViewUrl = doc.file_url ? `/api/view-doc?url=${encodeURIComponent(doc.file_url)}` : '';
 
                         return (
-                          <div key={doc.id} className="bg-white border border-brand-navy-dark/[0.04] rounded-xl p-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-end text-xs text-start">
-                            <div className="text-start">
-                              <span className="text-brand-navy-dark/40 block mb-1 text-start">{lang === 'ar' ? 'اسم المستند' : 'Document Name'}</span>
-                              <span className="font-bold text-brand-navy-dark block truncate text-start" title={docName}>{docName}</span>
+                          <div key={doc.id} className="bg-white border border-brand-navy-dark/[0.04] rounded-xl p-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs text-start w-full">
+                            <div className="text-start min-w-0 flex-1">
+                              <span className="text-brand-navy-dark/40 block text-[10px] font-bold mb-0.5 text-start">{lang === 'ar' ? 'اسم المستند' : 'Document Name'}</span>
+                              <span className="font-black text-brand-navy-dark block truncate text-start" title={docName}>{docName}</span>
                             </div>
 
-                            <div className="text-start">
-                              <span className="text-brand-navy-dark/40 block mb-1 text-start">{lang === 'ar' ? 'حالة الوثيقة' : 'Document Status'}</span>
+                            <div className="text-start shrink-0 w-full md:w-36">
+                              <span className="text-brand-navy-dark/40 block text-[10px] font-bold mb-0.5 text-start">{lang === 'ar' ? 'حالة الوثيقة' : 'Document Status'}</span>
                               <select
                                 value={doc.status}
                                 onChange={(e) => handleDocFieldChange(app.id, doc.id, 'status', e.target.value as any)}
-                                className="w-full bg-brand-light-bg border border-brand-navy-dark/10 rounded-lg p-2 font-semibold text-brand-navy-dark focus:outline-none cursor-pointer text-start"
+                                className="w-full bg-brand-light-bg border border-brand-navy-dark/10 rounded-lg p-1.5 font-bold text-brand-navy-dark focus:outline-none cursor-pointer text-start"
                               >
                                 <option value="pending">{t.statuses.pending}</option>
                                 <option value="approved">{t.statuses.approved}</option>
@@ -746,42 +772,33 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
                               </select>
                             </div>
 
-                            <div className="md:col-span-1 text-start">
+                            <div className="text-start flex-1 w-full">
                               {doc.status === 'rejected' ? (
-                                <div className="space-y-2 text-start">
+                                <div className="space-y-1.5 text-start w-full">
                                   {doc.file_url && (
                                     <div className="flex gap-1 text-start">
                                       <Link 
                                         href={secureViewUrl}
                                         target="_blank"
-                                        className="w-full text-center text-[11px] font-semibold text-brand-navy-dark bg-brand-light-bg border border-brand-navy-dark/10 py-1.5 px-2 rounded-md hover:bg-brand-navy-dark hover:text-white transition-all cursor-pointer"
+                                        className="w-full text-center text-[10px] font-bold text-brand-navy-dark bg-brand-light-bg border border-brand-navy-dark/10 py-1 rounded-md hover:bg-brand-navy-dark hover:text-white transition-all cursor-pointer"
                                       >
-                                        👁️ {lang === 'ar' ? 'معاينة' : 'View'}
+                                        👁️ {lang === 'ar' ? 'معاينة الملف المرفوض' : 'Preview'}
                                       </Link>
-                                      <button
-                                        type="button"
-                                        onClick={() => setActiveCanvasDoc({ appId: app.id, doc })}
-                                        className="bg-amber-50 border border-amber-300 text-amber-700 px-2 rounded-md hover:bg-amber-500 hover:text-white transition-colors"
-                                        title={t.interactiveRejectBtn}
-                                      >
-                                        🎨
-                                      </button>
                                     </div>
                                   )}
 
-                                  <span className="text-brand-navy-dark/40 block mb-0.5 text-start">{t.rejectReasonLabel}</span>
-                                  <div className="flex gap-1.5 text-start">
+                                  <div className="flex gap-1 text-start items-center w-full">
                                     <input
                                       type="text"
                                       value={doc.rejection_reason || ''}
                                       onChange={(e) => handleDocFieldChange(app.id, doc.id, 'rejection_reason', e.target.value)}
-                                      className="w-full bg-brand-light-bg border border-brand-navy-dark/10 rounded-lg p-2 focus:outline-none text-start"
-                                      placeholder="سبب الرفض..."
+                                      className="w-full bg-brand-light-bg border border-brand-navy-dark/10 rounded-lg p-1.5 font-semibold text-start focus:outline-none"
+                                      placeholder="سبب الرفض المباشر..."
                                     />
                                     <button
                                       type="button"
                                       onClick={() => handleAIGenerateResponse(app.id, doc.id, doc.rejection_reason)}
-                                      className="bg-brand-navy-dark text-white p-2 rounded-lg font-bold hover:bg-brand-gold transition-colors cursor-pointer"
+                                      className="bg-brand-navy-dark text-brand-gold px-2 py-1.5 rounded-lg font-black hover:bg-brand-gold hover:text-white transition-colors cursor-pointer select-none"
                                       title={t.aiGenerateBtn}
                                     >
                                       ✨
@@ -789,18 +806,18 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
                                   </div>
                                 </div>
                               ) : doc.file_url ? (
-                                <div className="flex items-center justify-between gap-2 bg-emerald-50 text-emerald-700 p-2 rounded-lg border border-emerald-100 font-semibold text-start">
+                                <div className="flex items-center justify-between gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-100 font-bold text-start w-full">
                                   <Link 
                                     href={secureViewUrl} 
                                     target="_blank" 
-                                    className="truncate hover:underline flex items-center gap-1 cursor-pointer text-start"
+                                    className="truncate hover:underline flex items-center gap-1 cursor-pointer text-start min-w-0"
                                   >
-                                    👁️ {lang === 'ar' ? 'المستند جاهز' : 'View Doc'}
+                                    👁️ {lang === 'ar' ? 'معاينة الملف' : 'View Doc'}
                                   </Link>
                                   <button 
                                     type="button"
                                     onClick={() => handleDocFieldChange(app.id, doc.id, 'file_url', null)}
-                                    className="text-rose-600 font-bold hover:underline cursor-pointer"
+                                    className="text-rose-600 font-black hover:underline cursor-pointer shrink-0"
                                   >
                                     {lang === 'ar' ? 'حذف' : 'Delete'}
                                   </button>
@@ -813,12 +830,11 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
                               )}
                             </div>
 
-                            <div className="flex items-center justify-between gap-2 text-start">
-                              {successId === `doc-${doc.id}` && <span className="text-xs font-bold text-emerald-600">✓</span>}
+                            <div className="flex items-center justify-end gap-2 text-start w-full md:w-auto shrink-0">
                               <button
                                 onClick={() => handleUpdateDocBtn(app.id, doc)}
                                 disabled={isPending}
-                                className="w-full bg-brand-gold text-white hover:bg-brand-gold-hover disabled:opacity-40 font-bold py-2 rounded-lg text-center cursor-pointer"
+                                className="w-full md:w-auto bg-brand-gold text-white hover:bg-brand-gold-hover disabled:opacity-40 font-black px-4 py-2 rounded-lg text-center cursor-pointer transition-colors"
                               >
                                 {t.updateDocBtn}
                               </button>
@@ -835,40 +851,43 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
         )}
       </div>
 
-      {/* 💳 نافذة إدارة الرسوم المضافة (المودال الحكومي) لتشغيل ميزة النفقات */}
+      {/* 💳 مودال إدارة الرسوم والمزامنة */}
       {activeFeesApp && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 text-start">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 text-start border border-brand-navy-dark/10 shadow-xl">
             <div className="flex justify-between items-center border-b pb-3 text-start">
-              <h3 className="font-bold text-brand-navy-dark text-lg text-start">{t.feesBtn} - {activeFeesApp.company_name}</h3>
-              <button onClick={() => setActiveFeesApp(null)} className="text-gray-400 hover:text-black">✕</button>
+              <h3 className="font-black text-brand-navy-dark text-base sm:text-lg text-start">{t.feesBtn} - {activeFeesApp.company_name}</h3>
+              <button onClick={() => setActiveFeesApp(null)} className="text-gray-400 hover:text-black font-black cursor-pointer p-1">✕</button>
             </div>
             
-            <div className="max-h-60 overflow-y-auto space-y-2 text-start">
+            <div className="max-h-60 overflow-y-auto space-y-2 text-start pr-1">
               {activeFeesApp.fees && activeFeesApp.fees.length > 0 ? (
-                activeFeesApp.fees.map((fee) => (
-                  <div key={fee.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border text-sm text-start">
-                    <span className="font-medium text-gray-700 text-start">{fee.description}</span>
-                    <span className="font-bold text-emerald-600 text-start">{fee.amount} AED</span>
-                  </div>
-                ))
+                activeFeesApp.fees.map((fee) => {
+                  if (!fee) return null;
+                  return (
+                    <div key={fee.id} className="flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-gray-100 text-xs font-bold text-start">
+                      <span className="font-bold text-gray-700 text-start">{fee.description}</span>
+                      <span className="font-mono font-black text-emerald-600 text-start">{fee.amount} AED</span>
+                    </div>
+                  );
+                })
               ) : (
-                <p className="text-xs text-gray-400 text-center py-4 w-full">لا يوجد رسوم مسجلة حالياً</p>
+                <p className="text-xs text-gray-400 text-center py-4 w-full font-medium">{lang === 'ar' ? 'لا توجد رسوم حكومية مسجلة حالياً.' : 'No recorded fees yet.'}</p>
               )}
             </div>
 
-            <div className="border-t pt-3 space-y-3 text-start">
+            <div className="border-t pt-3 space-y-3 text-start text-xs font-bold">
               <input 
-                type="text" placeholder="وصف الرسوم (مثال: رسوم الغرفة التجارية)" 
+                type="text" placeholder={lang === 'ar' ? 'وصف الرسوم (مثال: رسوم اعتماد رخصة الغرفة)' : 'Fees description...'} 
                 value={newFeeForm.description}
                 onChange={(e) => setNewFeeForm({...newFeeForm, description: e.target.value})}
-                className="w-full bg-gray-50 border p-2.5 rounded-xl text-xs text-start"
+                className="w-full bg-gray-50 border border-gray-200 p-2.5 rounded-xl text-start focus:outline-none focus:border-brand-gold/40 font-semibold"
               />
               <input 
-                type="number" placeholder="المبلغ بالدرهم AED" 
+                type="number" placeholder={lang === 'ar' ? 'المبلغ الفعلي بالدرهم AED' : 'Amount in AED...'} 
                 value={newFeeForm.amount}
                 onChange={(e) => setNewFeeForm({...newFeeForm, amount: e.target.value})}
-                className="w-full bg-gray-50 border p-2.5 rounded-xl text-xs text-start"
+                className="w-full bg-gray-50 border border-gray-200 p-2.5 rounded-xl text-start focus:outline-none focus:border-brand-gold/40 font-mono font-bold"
               />
               <button 
                 onClick={() => {
@@ -877,64 +896,78 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
                   handleFieldChange(activeFeesApp.id, 'fees', updatedFees);
                   setNewFeeForm({ description: '', amount: '' });
                 }}
-                className="w-full bg-emerald-600 text-white font-bold p-2.5 rounded-xl text-xs hover:bg-emerald-700 cursor-pointer"
+                className="w-full bg-emerald-600 text-white font-black p-2.5 rounded-xl hover:bg-emerald-700 cursor-pointer select-none transition-colors"
               >
-                ＋ إضافة الرسوم والمزامنة الحية
+                {lang === 'ar' ? '＋ إضافة الرسوم والمزامنة الحية' : '＋ Add Gov Fee'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ➕ مودال إنشاء معاملة جديدة للآدمن */}
+      {/* ➕ مودال إنشاء معاملة جديدة للآدمن (مصحح الهيكلية بالكامل) */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 text-start">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 text-start border border-brand-navy-dark/10 shadow-xl">
             <div className="flex justify-between items-center border-b pb-3 text-start">
-              <h3 className="font-bold text-brand-navy-dark text-lg text-start">{t.modalCreateTitle}</h3>
-              <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-400 hover:text-black">✕</button>
+              <h3 className="font-black text-brand-navy-dark text-base sm:text-lg text-start">{t.modalCreateTitle}</h3>
+              <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-400 hover:text-black font-black cursor-pointer p-1">✕</button>
             </div>
             
-            <div className="space-y-3 text-xs text-start">
+            <div className="space-y-3 text-xs font-bold text-start">
               <div className="text-start">
-                <label className="block mb-1 font-bold text-start">{t.selectUser}</label>
+                <label className="block mb-1 font-black text-start">{t.selectUser}</label>
                 <select 
-                  className="w-full border p-2.5 rounded-xl bg-gray-50 text-start cursor-pointer"
-                  onChange={(e) => {
-                    setNewAppForm({ ...newAppForm, userId: e.target.value });
-                  }}
+                  className="w-full border p-2.5 rounded-xl bg-gray-50 text-start cursor-pointer font-semibold focus:outline-none"
+                  value={newAppForm.userId}
+                  onChange={(e) => setNewAppForm({ ...newAppForm, userId: e.target.value })}
                 >
-                  <option value="">-- اختر مستثمر --</option>
-                  {allUsersList.map(u => (
-                    <option key={u.id} value={u.id}>{u.name} ({u.company_name})</option>
+                  <option value="">-- {lang === 'ar' ? 'اختر مستثمر لتخصيص المعاملة' : 'Select investor'} --</option>
+                  {allUsersList.map(u => {
+                    if (!u) return null;
+                    return <option key={u.id} value={u.id}>{u.name} ({u.company_name})</option>;
+                  })}
+                </select>
+              </div>
+
+              <div className="text-start">
+                <label className="block mb-1 font-black text-start">{lang === 'ar' ? 'نوع الخدمة / الرخصة المطلوبة لفرش الوثائق' : 'Service Tracking Segment'}</label>
+                <select
+                  className="w-full border p-2.5 rounded-xl bg-gray-50 text-start cursor-pointer font-semibold focus:outline-none"
+                  value={newAppForm.serviceType}
+                  onChange={(e) => setNewAppForm({ ...newAppForm, serviceType: e.target.value })}
+                >
+                  {Object.entries(t.serviceTypes).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
                   ))}
                 </select>
               </div>
 
               <div className="text-start">
-                <label className="block mb-1 font-bold text-start">{lang === 'ar' ? 'نوع الخدمة المطلوبة' : 'Service Type'}</label>
+                <label className="block mb-1 font-black text-start">{lang === 'ar' ? 'الحد الأقصى للـ SLA (بالساعات الميلادية)' : 'SLA Target Limit (Hours)'}</label>
                 <input 
-                  type="text" placeholder="مثال: رخصة تجارية فورية"
-                  value={newAppForm.serviceType}
-                  onChange={(e) => setNewAppForm({ ...newAppForm, serviceType: e.target.value })}
-                  className="w-full border p-2.5 rounded-xl bg-gray-50 text-start"
+                  type="number" 
+                  value={newAppForm.sla_hours_limit}
+                  onChange={(e) => setNewAppForm({ ...newAppForm, sla_hours_limit: parseInt(e.target.value) || 48 })}
+                  className="w-full border p-2.5 rounded-xl bg-gray-50 text-start focus:outline-none font-bold font-mono"
                 />
               </div>
 
               <div className="text-start">
-                <label className="block mb-1 font-bold text-start">{lang === 'ar' ? 'الحد الأقصى للـ SLA (بالساعات)' : 'SLA Limit (Hours)'}</label>
-                <input 
-                  type="number" 
-                  value={newAppForm.slaLimit}
-                  onChange={(e) => setNewAppForm({ ...newAppForm, slaLimit: parseInt(e.target.value) })}
-                  className="w-full border p-2.5 rounded-xl bg-gray-50 text-start"
+                <label className="block mb-1 font-black text-start">{t.notesLabel}</label>
+                <textarea 
+                  rows={2}
+                  placeholder={t.notesPlaceholder}
+                  value={newAppForm.notes}
+                  onChange={(e) => setNewAppForm({ ...newAppForm, notes: e.target.value })}
+                  className="w-full border p-2.5 rounded-xl bg-gray-50 text-start focus:outline-none font-semibold resize-none"
                 />
               </div>
 
               <button 
                 onClick={handleCreateApplication}
                 disabled={isPending}
-                className="w-full bg-brand-navy-dark text-white font-bold p-3 rounded-xl mt-2 hover:bg-brand-navy-light cursor-pointer"
+                className="w-full bg-brand-navy-dark text-white font-black p-3 rounded-xl mt-2 hover:bg-brand-navy-light cursor-pointer select-none transition-colors"
               >
                 {isPending ? t.saving : t.createNewBtn}
               </button>
@@ -942,6 +975,39 @@ export default function AdminPanel({ initialApplications, allUsersList = [], lan
           </div>
         </div>
       )}
+
+      {/* 🗑️ مودال الحذف الاحترافي والمطور (بديل الـ window.confirm التقليدي) */}
+      {deleteTargetId && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 text-start border border-brand-navy-dark/10 shadow-xl animate-scaleUp">
+            <div className="text-center sm:text-start space-y-2">
+              <h3 className="font-black text-rose-600 text-base sm:text-lg flex items-center gap-1.5 justify-center sm:justify-start">
+                ⚠️ {t.confirmDeleteTitle}
+              </h3>
+              <p className="text-brand-navy-dark/70 text-xs sm:text-sm font-semibold leading-relaxed">
+                {t.confirmDeleteDesc}
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-2.5 pt-2 text-xs font-black">
+              <button
+                onClick={() => setDeleteTargetId(null)}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-brand-navy-dark p-3 rounded-xl cursor-pointer select-none transition-colors"
+              >
+                {t.cancel}
+              </button>
+              <button
+                onClick={executeDeleteApp}
+                disabled={isPending}
+                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white p-3 rounded-xl cursor-pointer select-none transition-colors disabled:opacity-50"
+              >
+                {isPending ? t.saving : t.confirm}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
