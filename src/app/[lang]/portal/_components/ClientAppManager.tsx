@@ -52,7 +52,6 @@ export default function ClientAppManager({
 
   return (
     <div className="w-full space-y-6 sm:space-y-8">
-      {/* 1. نموذج تقديم المعاملات */}
       <SubmitAppForm 
         userId={userId}
         lang={lang}
@@ -65,7 +64,6 @@ export default function ClientAppManager({
         }}
       />
 
-      {/* 2. ريندر كروت المعاملات والمستندات بداخل بيئة الـ Client */}
       <div className="grid grid-cols-1 gap-5 sm:gap-8 w-full">
         {processedApplications.map((app) => {
           if (!app) return null;
@@ -76,7 +74,6 @@ export default function ClientAppManager({
             <div key={app.id} className="bg-white border border-brand-navy-dark/[0.05] rounded-xl p-4 sm:p-7 shadow-2xs relative overflow-hidden group text-start w-full">
               <div className="absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-brand-gold to-brand-gold-hover" />
               
-              {/* رقم السجل التتبعي */}
               <div className="mb-4 bg-brand-navy-dark/[0.015] p-2.5 rounded-lg border border-brand-navy-dark/[0.04] flex items-center justify-between gap-3 w-full text-start">
                 <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-brand-navy-dark/60 text-start">
                   <span className="w-1 h-1 bg-brand-gold rounded-full shrink-0" />
@@ -88,7 +85,6 @@ export default function ClientAppManager({
                 <ClientIdCopyButton id={app.id} lang={lang} />
               </div>
 
-              {/* خط العنوان وشريط الحالة وأزرار التحكم */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5 w-full text-start">
                 <div className="text-start">
                   <h3 className="text-base sm:text-xl font-black text-brand-navy-dark text-start">{app.serviceTitle}</h3>
@@ -103,7 +99,6 @@ export default function ClientAppManager({
                 </div>
               </div>
 
-              {/* وثيقة الإنجاز النهائي الصادرة */}
               {app.issued_document_url && (
                 <div className="mb-5 bg-emerald-50 border border-emerald-200 text-emerald-900 p-3.5 sm:p-5 rounded-xl shadow-3xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 animate-fadeIn w-full text-start">
                   <p className="font-bold text-xs sm:text-sm text-start leading-relaxed">
@@ -120,7 +115,6 @@ export default function ClientAppManager({
                 </div>
               )}
 
-              {/* الخط الزمني للتتبع اللحظي */}
               <div className="mb-5 bg-brand-light-bg/30 border border-brand-navy-dark/[0.02] rounded-xl p-3 sm:p-5 w-full text-start">
                 <div className="flex justify-between items-center mb-3 text-[10px] sm:text-xs font-bold">
                   <span className="text-brand-navy-dark/40">{t.progressText}</span>
@@ -131,7 +125,6 @@ export default function ClientAppManager({
                 <TransactionTimeline status={app.status} progress={app.progress} lang={lang} />
               </div>
 
-              {/* ملاحظات المستشار */}
               {app.notes && (
                 <div className="bg-brand-navy-dark/[0.015] border border-brand-navy-dark/[0.03] rounded-lg p-3 text-xs text-brand-navy-dark/80 mb-5 text-start w-full">
                   <span className="text-[10px] text-brand-navy-dark/40 block font-bold mb-1 text-start">{t.updateLabel}</span>
@@ -139,7 +132,6 @@ export default function ClientAppManager({
                 </div>
               )}
 
-              {/* 📂 موديول إدارة وريندر الوثائق والمستندات الشامل */}
               {app.displayedDocs && app.displayedDocs.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-brand-navy-dark/[0.05] w-full text-start">
                   <h4 className="text-xs sm:text-sm font-black text-brand-navy-dark mb-3 flex items-center gap-1.5 text-start">
@@ -208,7 +200,6 @@ export default function ClientAppManager({
                 </div>
               )}
 
-              {/* طابع وقت آخر تحديث */}
               <div className={`mt-4 pt-3 border-t border-brand-navy-dark/[0.03] flex justify-end text-[10px] font-mono text-brand-navy-dark/40 ${isRtl ? 'text-left' : 'text-right'}`}>
                 <span>{t.lastUpdate} {new Date(app.updated_at).toLocaleDateString(lang === 'ar' ? 'ar-AE' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
               </div>
@@ -218,7 +209,6 @@ export default function ClientAppManager({
         })}
       </div>
 
-      {/* مودال الأخطاء السحابية */}
       {portalError && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start animate-fadeIn">
           <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 border border-rose-500/20 shadow-2xl animate-scaleUp">
@@ -231,7 +221,6 @@ export default function ClientAppManager({
         </div>
       )}
 
-      {/* مودال الحذف الموحد */}
       {deleteTargetId && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start animate-fadeIn">
           <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 border border-brand-navy-dark/10 shadow-2xl animate-scaleUp">

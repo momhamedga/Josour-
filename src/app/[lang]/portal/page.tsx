@@ -17,11 +17,9 @@ interface PortalPageProps {
 }
 
 export default async function ClientPortalPage({ params }: PortalPageProps) {
-  // 1. فك الـ Params واللغة فوراً لمنع الـ Async Collisions
   const { lang } = await params;
   const isRtl = lang === 'ar';
 
-  // 2. التحقق الآمن والمباشر من الكوكيز للفرز السحابي
   const cookieStore = await cookies();
   const userEmail = cookieStore.get('user_email')?.value;
 
@@ -29,7 +27,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     redirect(`/${lang}/portal/login`);
   }
 
-  // 3. تأمين كتل التراجم والقواميس الثابتة والاحتياطية
   const dict = siteContent?.[lang] || siteContent?.ar || {};
 
   const translations = {
@@ -278,7 +275,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
       const nameAr = translation.ar;
       const nameEn = translation.en;
 
-      // 🌟 التحديث الحاسم والمطور للمطابقة الذكية الشاملة لملف الرخصة والمستندات
+      // 🌟 لُوجيك المطابقة المطوّر والذكي لالتقاط ملف الرخصة حتى لو تم حفظه عشوائياً أو باسم "مستند مرفق"
       const existingDoc = app.documents?.find((d: any) => {
         if (!d) return false;
         
@@ -286,26 +283,26 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
         const dbNameEn = d.document_name_en || '';
         const dbId = d.id ? String(d.id) : '';
 
-        // أ. فحص التطابق المباشر الدقيق للقيمة أو مفتاح الـ ID السحابي
+        // تطابق مباشر دقيق بالقيمة أو بالمعرّف السحابي
         if (dbNameAr === nameAr || dbNameEn === nameEn || dbId.includes(docKey)) {
           return true;
         }
 
-        // ب. تأمين الفرز الذكي لـ "رخصة المنشأة" لتخطي مشاكل المسافات أو الرموز والكلمات الناقصة
+        // التقاط ذكي لـ رخصة المنشأة إذا احتوت الداتابيز على أي كلمة دلالية تخصها
         if (docKey === 'trade_license' && (dbNameAr.includes('رخصة') || dbNameEn.toLowerCase().includes('license'))) {
           return true;
         }
 
-        // ج. تأمين الفرز الذكي لعقود التأسيس والسجلات التجارية لعدم تكرار طلبها
-        if (docKey === 'corporate_papex' && (dbNameAr.includes('تأسيس') || dbNameAr.includes('سجل') || dbNameEn.toLowerCase().includes('association') || dbNameEn.toLowerCase().includes('corporate'))) {
-          return true;
+        // التقاط المستندات الأولية التي قد ترفع بشكل بدئي عام وتفادي مشكلة الـ Fallback
+        if (dbNameAr === 'مستند مرفق' || dbNameEn === 'Attached Document') {
+          // إذا كان المستند هو الوحيد المرفوع الذي يطابق الترتيب أو مسار المعاملة
+          return dbId.includes(docKey) || i === 0;
         }
 
         return false;
       });
       
       if (existingDoc) {
-        // الحفاظ على توحيد المسمى النصي الظاهر للعميل بناءً على القاموس القياسي للمشروع لجمالية الـ UI
         return {
           ...existingDoc,
           document_name_ar: nameAr,
@@ -344,7 +341,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     <main className={`min-h-screen bg-brand-light-bg py-12 md:py-20 px-3 sm:px-6 lg:px-8 text-start ${isRtl ? 'font-cairo' : 'font-sans'}`} dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 w-full">
         
-        {/* شريط الأدوات العلوي وتسجيل الخروج الآمن */}
         <div className="flex items-center justify-between gap-2 bg-white/60 border border-brand-navy-dark/[0.04] p-2 rounded-xl backdrop-blur-xs w-full">
           <Link 
             href={`/${lang}`}
@@ -367,7 +363,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
           </form>
         </div>
 
-        {/* معلومات المستثمر والهيدر الإستراتيجي */}
         <div className="border-b border-brand-navy-dark/10 pb-5 sm:pb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
           <div className="text-start">
             <h1 className="text-xl sm:text-3xl font-black text-brand-navy-dark tracking-tight mb-1.5 text-start">{t.title}</h1>
@@ -381,7 +376,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
           )}
         </div>
 
-        {/* لوحة الإحصائيات الشاملة السريعة للبوابة الإستثمارية */}
         {processedApplications.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
             <div className="bg-white border border-brand-navy-dark/[0.05] rounded-xl p-3 shadow-2xs text-start">
@@ -411,7 +405,6 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
           </div>
         )}
 
-        {/* استدعاء المكون التفاعلي وإعطاؤه الصلاحية الكاملة للريندر */}
         {userData && (
           <ClientAppManager 
             userId={userData.id}

@@ -4,7 +4,6 @@ import { put } from '@vercel/blob';
 import { sql } from '@/lib/neon';
 import { revalidatePath } from 'next/cache';
 
-// تعريف واجهات الأنواع لمنع الخطوط الحمراء نهائياً
 interface DbCountRow {
   count: string | number;
 }
@@ -18,7 +17,7 @@ interface DbStatusRow {
   status: string;
 }
 
-// 1. أكشن إعادة رفع المستندات المرفوضة أو الرفع البدئي
+// 1. أكشن إعادة رفع المستندات المرفوضة أو الرفع البدئي (معدل بالملي)
 export async function resubmitDocument(
   docId: string,
   appId: string,
@@ -39,6 +38,7 @@ export async function resubmitDocument(
       let docNameAr = 'مستند مرفق';
       let docNameEn = 'Attached Document';
 
+      // 🌟 فحص وحفظ المسميات القياسية للمستندات لضمان ثبات لُوجيك المطابقة بقاعدة البيانات
       if (docId.includes('passport')) { 
         docNameAr = 'صورة جواز السفر الساري'; 
         docNameEn = 'Valid Passport Copy'; 
@@ -54,6 +54,21 @@ export async function resubmitDocument(
       } else if (docId.includes('current_visa')) { 
         docNameAr = 'تأشيرة الدخول أو الإقامة الحالية'; 
         docNameEn = 'Current Visa/Entry Permit'; 
+      } else if (docId.includes('trade_license')) {
+        docNameAr = 'صورة رخصة المنشأة الحالية';
+        docNameEn = 'Current Trade License Copy';
+      } else if (docId.includes('financial_statement')) {
+        docNameAr = 'القوائم المالية المدققة للشركة';
+        docNameEn = 'Audited Financial Statements';
+      } else if (docId.includes('icv_plan')) {
+        docNameAr = 'خطة القيمة الوطنية المضافة المقترحة';
+        docNameEn = 'Proposed ICV Improvement Plan';
+      } else if (docId.includes('property_deed')) {
+        docNameAr = 'صورة الملكية أو سند العقار المعني';
+        docNameEn = 'Title Deed Copy';
+      } else if (docId.includes('id_card')) {
+        docNameAr = 'الهوية الوطنية / بطاقة الإقامة';
+        docNameEn = 'National ID / Emirates ID';
       }
 
       await sql`
@@ -96,7 +111,7 @@ export async function resubmitDocument(
   }
 }
 
-// 2. إنشاء معاملة جديدة مع تطبيق القيود الصارمة (تم إصلاح تفجير الـ Error)
+// 2. إنشاء معاملة جديدة مع تطبيق القيود الصارمة
 export async function createNewApplication(userId: string, serviceType: string, lang: 'ar' | 'en') {
   const errors = {
     ar: {
@@ -112,7 +127,6 @@ export async function createNewApplication(userId: string, serviceType: string, 
   const t = errors[lang] || errors.ar;
 
   try {
-    // 1. حد أقصى 6 معاملات شهرياً
     const monthlyCheck = await sql`
       SELECT COUNT(*) as count 
       FROM applications 
@@ -125,11 +139,9 @@ export async function createNewApplication(userId: string, serviceType: string, 
       : Number(monthlyCheck[0]?.count || 0);
 
     if (monthlyCount >= 6) {
-      // 🌟 التعديل السحري: إرجاع كائن الخطأ بدلاً من عمل throw المدمر للـ Build
       return { error: t.monthlyLimit };
     }
 
-    // 2. حد أقصى للمعاملات النشطة
     const activeCheck = await sql`
       SELECT 
         COUNT(*) FILTER (WHERE status NOT IN ('approved', 'rejected')) as active_count,
@@ -147,11 +159,9 @@ export async function createNewApplication(userId: string, serviceType: string, 
       : Number(activeCheck[0]?.approved_count || 0);
 
     if (activeCount >= 3 && approvedCount < 2) {
-      // 🌟 التعديل السحري: إرجاع كائن الخطأ بدلاً من عمل throw المدمر للـ Build
       return { error: t.activeLimit };
     }
 
-    // 3. إدراج المعاملة بنجاح
     await sql`
       INSERT INTO applications (user_id, service_type, status, progress, created_at, updated_at)
       VALUES (${userId}, ${serviceType}, 'pending', 0, NOW(), NOW())
@@ -194,7 +204,7 @@ export async function updateApplicationDetails(
   }
 }
 
-// 4. حذف المعاملة مع تطبيق الشرط الأمني الصارم للعميل (تم التعديل للأمان)
+// 4. حذف المعاملة مع تطبيق الشرط الأمني الصارم للعميل
 export async function deleteApplication(appId: string, lang: 'ar' | 'en') {
   try {
     const appRows = await sql`
