@@ -8,22 +8,20 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { logoutClientUser } from '@/app/actions/user-auth';
 
-import TransactionTimeline from './_components/TransactionTimeline';
 import PortalNotification from './_components/PortalNotification';
-import DocumentResubmitter from './_components/DocumentResubmitter';
-import DeleteAppButton from './_components/DeleteAppButton'; 
-import ClientAppManager from './_components/ClientAppManager'; // المكون الفخم الجديد
+import ClientAppManager from './_components/ClientAppManager'; 
 import Link from 'next/link';
-import ClientIdCopyButton from './_components/ClientIdCopyButton'; 
 
 interface PortalPageProps {
   params: Promise<{ lang: 'ar' | 'en' }>;
 }
 
 export default async function ClientPortalPage({ params }: PortalPageProps) {
+  // 1. فك الـ Params واللغة فوراً لمنع الـ Async Collisions
   const { lang } = await params;
   const isRtl = lang === 'ar';
 
+  // 2. التحقق الآمن والمباشر من الكوكيز للفرز السحابي
   const cookieStore = await cookies();
   const userEmail = cookieStore.get('user_email')?.value;
 
@@ -31,6 +29,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     redirect(`/${lang}/portal/login`);
   }
 
+  // 3. تأمين كتل التراجم والقواميس الثابتة والاحتياطية
   const dict = siteContent?.[lang] || siteContent?.ar || {};
 
   const translations = {
@@ -314,7 +313,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     acc + (app?.displayedDocs?.filter((d: any) => d && d.status === 'rejected').length || 0), 0
   );
 
-return (
+  return (
     <main className={`min-h-screen bg-brand-light-bg py-12 md:py-20 px-3 sm:px-6 lg:px-8 text-start ${isRtl ? 'font-cairo' : 'font-sans'}`} dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 w-full">
         
@@ -355,7 +354,7 @@ return (
           )}
         </div>
 
-        {/* لوحة الإحصائيات الشاملة السريعة */}
+        {/* لوحة الإحصائيات الشاملة السريعة للبوابة الإستثمارية */}
         {processedApplications.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
             <div className="bg-white border border-brand-navy-dark/[0.05] rounded-xl p-3 shadow-2xs text-start">
@@ -385,7 +384,7 @@ return (
           </div>
         )}
 
-        {/* 🌟 استدعاء القائد التفاعلي الموحد وإعطاؤه الصلاحية الكاملة لرسم كروت المعاملات وحمايتها بمودال الحذف الفخم */}
+        {/* 🌟 استدعاء القائد التفاعلي الموحد ليتكفل بالريندر بمودال الحذف الأمني ومنع التكرار نهائياً */}
         {userData && (
           <ClientAppManager 
             userId={userData.id}
@@ -402,4 +401,4 @@ return (
       </div>
     </main>
   );   
-} 
+}

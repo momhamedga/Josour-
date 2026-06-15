@@ -5,6 +5,7 @@ import SubmitAppForm from './SubmitAppForm';
 import DeleteAppButton from './DeleteAppButton';
 import TransactionTimeline from './TransactionTimeline';
 import ClientIdCopyButton from './ClientIdCopyButton';
+import DocumentResubmitter from './DocumentResubmitter';
 import Link from 'next/link';
 import { adminDeleteApplication } from '@/app/actions/portal-actions';
 
@@ -13,7 +14,7 @@ interface ClientAppManagerProps {
   lang: 'ar' | 'en';
   isRtl: boolean;
   availableServices: any[];
-  processedApplications: any[]; // تمرير المعاملات هنا للتحكم بها حياً
+  processedApplications: any[];
   translations: any;
   statusColors: any;
   docStatusStyles: any;
@@ -44,14 +45,14 @@ export default function ClientAppManager({
         window.location.reload(); 
       } else {
         setDeleteTargetId(null);
-        setPortalError(lang === 'ar' ? 'فشل حذف المعاملة، يرجى مراجعة الصلاحيات.' : 'Failed to delete application.');
+        setPortalError(lang === 'ar' ? 'فشل حذف المعاملة، يرجى مراجعة الصلاحيات الأمنية.' : 'Secure deletion failed. Check portal permissions.');
       }
     });
   };
 
   return (
     <div className="w-full space-y-6 sm:space-y-8">
-      {/* 1. نموذج التقديم */}
+      {/* 1. نموذج التقديم المعزز تكتيكياً */}
       <SubmitAppForm 
         userId={userId}
         lang={lang}
@@ -64,7 +65,7 @@ export default function ClientAppManager({
         }}
       />
 
-      {/* 2. ريندر كروت المعاملات - هنا يكمن السر لتشغيل الأزرار فورا */}
+      {/* 2. مسار عرض كروت المعاملات التفاعلية المحمية */}
       <div className="grid grid-cols-1 gap-5 sm:gap-8 w-full">
         {processedApplications.map((app) => {
           if (!app) return null;
@@ -75,6 +76,7 @@ export default function ClientAppManager({
             <div key={app.id} className="bg-white border border-brand-navy-dark/[0.05] rounded-xl p-4 sm:p-7 shadow-2xs relative overflow-hidden group text-start w-full">
               <div className="absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-brand-gold to-brand-gold-hover" />
               
+              {/* خط رقم السجل الموحد */}
               <div className="mb-4 bg-brand-navy-dark/[0.015] p-2.5 rounded-lg border border-brand-navy-dark/[0.04] flex items-center justify-between gap-3 w-full text-start">
                 <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-brand-navy-dark/60 text-start">
                   <span className="w-1 h-1 bg-brand-gold rounded-full shrink-0" />
@@ -86,6 +88,7 @@ export default function ClientAppManager({
                 <ClientIdCopyButton id={app.id} lang={lang} />
               </div>
 
+              {/* العنوان والتحكم المباشر */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5 w-full text-start">
                 <div className="text-start">
                   <h3 className="text-base sm:text-xl font-black text-brand-navy-dark text-start">{app.serviceTitle}</h3>
@@ -96,11 +99,12 @@ export default function ClientAppManager({
                     style={{ backgroundColor: currentColors.bg, borderColor: currentColors.border, color: currentColors.textCol }}>
                     {statusText}
                   </span>
-                  {/* 🌟 تمرير دالة فتح المودال المباشرة للزرار */}
+                  {/* 🌟 زرار الحذف يستدعي دالة فتح المودال مباشرة دون وسطاء */}
                   <DeleteAppButton appId={app.id} lang={lang} onOpenDeleteModal={(id) => setDeleteTargetId(id)} />
                 </div>
               </div>
 
+              {/* بانر وثيقة الإنجاز النهائي الصادرة */}
               {app.issued_document_url && (
                 <div className="mb-5 bg-emerald-50 border border-emerald-200 text-emerald-900 p-3.5 sm:p-5 rounded-xl shadow-3xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 animate-fadeIn w-full text-start">
                   <p className="font-bold text-xs sm:text-sm text-start leading-relaxed">
@@ -117,6 +121,7 @@ export default function ClientAppManager({
                 </div>
               )}
 
+              {/* الجدول الزمني التتبعي الفاخر */}
               <div className="mb-5 bg-brand-light-bg/30 border border-brand-navy-dark/[0.02] rounded-xl p-3 sm:p-5 w-full text-start">
                 <div className="flex justify-between items-center mb-3 text-[10px] sm:text-xs font-bold">
                   <span className="text-brand-navy-dark/40">{t.progressText}</span>
@@ -127,6 +132,7 @@ export default function ClientAppManager({
                 <TransactionTimeline status={app.status} progress={app.progress} lang={lang} />
               </div>
 
+              {/* تحديثات المستشار الإداري */}
               {app.notes && (
                 <div className="bg-brand-navy-dark/[0.015] border border-brand-navy-dark/[0.03] rounded-lg p-3 text-xs text-brand-navy-dark/80 mb-5 text-start w-full">
                   <span className="text-[10px] text-brand-navy-dark/40 block font-bold mb-1 text-start">{t.updateLabel}</span>
@@ -134,42 +140,121 @@ export default function ClientAppManager({
                 </div>
               )}
 
-              {/* ... باقي كود ريندر الوثائق والمستندات كما هو لضمان بقائه ناصعاً ... */}
+              {/* 📂 موديول إدارة وريندر الوثائق والمستندات (كامل مية بالمية) */}
+              {app.displayedDocs && app.displayedDocs.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-brand-navy-dark/[0.05] w-full text-start">
+                  <h4 className="text-xs sm:text-sm font-black text-brand-navy-dark mb-3 flex items-center gap-1.5 text-start">
+                    <span className="w-1 h-2.5 bg-brand-gold rounded-full inline-block" />
+                    {t.docsTitle}
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full text-start">
+                    {app.displayedDocs.map((doc: any) => {
+                      if (!doc) return null;
+                      const docName = lang === 'ar' ? doc.document_name_ar : doc.document_name_en;
+                      const docStatusText = t.statuses[doc.status] || t.statuses.pending;
+                      const styleClass = docStatusStyles[doc.status] || docStatusStyles.pending;
+                      const secureViewUrl = doc.file_url ? `/api/view-doc?url=${encodeURIComponent(doc.file_url)}` : '';
+
+                      return (
+                        <div key={doc.id} className="border border-brand-navy-dark/[0.04] rounded-lg p-3 flex flex-col justify-between bg-brand-light-bg/20 gap-2 w-full text-start">
+                          <div className="flex justify-between items-start gap-2 text-start w-full">
+                            <span className="text-[11px] font-bold text-brand-navy-dark/80 leading-tight text-start flex-1 min-w-0 truncate">{docName}</span>
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-black border shrink-0 whitespace-nowrap ${styleClass}`}>
+                              {doc.file_url ? docStatusText : (lang === 'ar' ? 'مطلوب الرفع' : 'Required')}
+                            </span>
+                          </div>
+
+                          {doc.status === 'rejected' && (
+                            <div className="space-y-2 w-full text-start">
+                              {doc.rejection_reason && (
+                                <div className="text-[10px] text-rose-700 bg-rose-50/70 p-2 rounded-lg border border-rose-100 font-semibold text-start">
+                                  <strong>{t.rejectionReason}</strong> {doc.rejection_reason}
+                                </div>
+                              )}
+                              
+                              {secureViewUrl && (
+                                <Link 
+                                  href={secureViewUrl} 
+                                  target="_blank" 
+                                  rel="noreferrer"
+                                  className="text-[10px] font-black text-brand-navy-dark hover:underline block text-center cursor-pointer"
+                               >
+                                  {t.viewRejected}
+                                </Link>
+                              )}
+                              <DocumentResubmitter docId={doc.id} appId={app.id} lang={lang} />
+                            </div>
+                          )}
+
+                          {doc.file_url && doc.status !== 'rejected' && (
+                            <Link 
+                              href={secureViewUrl} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="text-[10px] text-center font-bold text-brand-gold bg-brand-navy-dark hover:bg-brand-navy-light py-1.5 rounded-lg transition-colors mt-1 block shadow-xs cursor-pointer w-full"
+                            >
+                              {t.downloadDoc}
+                            </Link>
+                          )}
+
+                          {!doc.file_url && (
+                            <div className="mt-0.5 w-full">
+                              <DocumentResubmitter docId={doc.id} appId={app.id} lang={lang} />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* طابع وقت آخر تحديث */}
+              <div className={`mt-4 pt-3 border-t border-brand-navy-dark/[0.03] flex justify-end text-[10px] font-mono text-brand-navy-dark/40 ${isRtl ? 'text-left' : 'text-right'}`}>
+                <span>{t.lastUpdate} {new Date(app.updated_at).toLocaleDateString(lang === 'ar' ? 'ar-AE' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+              </div>
+
             </div>
           ); 
         })}
       </div>
 
-      {/* ⚠️ مودال الأخطاء */}
+      {/* ⚠️ مودال الأخطاء الفخم المنبثق */}
       {portalError && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start">
-          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 border border-rose-500/20 shadow-2xl">
-            <h3 className="font-black text-rose-600 text-base sm:text-lg">{lang === 'ar' ? '⚠️ عطل في المعالجة' : '⚠️ Request Failure'}</h3>
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 border border-rose-500/20 shadow-2xl animate-scaleUp">
+            <h3 className="font-black text-rose-600 text-base sm:text-lg">{lang === 'ar' ? '⚠️ عطل في المعالجة الآمنة' : '⚠️ Secure Request Failure'}</h3>
             <p className="text-brand-navy-dark/80 text-xs sm:text-sm bg-rose-50/50 p-3.5 rounded-xl border border-rose-100">{portalError}</p>
-            <button onClick={() => setPortalError(null)} className="w-full bg-brand-navy-dark text-white p-3 rounded-xl cursor-pointer">إغلاق</button>
+            <button onClick={() => setPortalError(null)} className="w-full bg-brand-navy-dark text-white p-3 rounded-xl cursor-pointer font-bold text-xs transition-colors hover:bg-brand-navy-light">
+              {lang === 'ar' ? 'إغلاق وإعادة المحاولة' : 'Dismiss'}
+            </button>
           </div>
         </div>
       )}
 
-      {/* 🗑️ مودال الحذف الفخم الحديث */}
+      {/* 🗑️ موديول الحذف الأمني المنبثق الفخم والجذاب الموحد */}
       {deleteTargetId && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start">
-          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 border border-brand-navy-dark/10 shadow-xl">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs text-start animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 border border-brand-navy-dark/10 shadow-2xl animate-scaleUp">
             <div className="space-y-2">
-              <h3 className="font-black text-rose-600 text-base sm:text-lg">⚠️ {lang === 'ar' ? 'تأكيد الحذف الأمني' : 'Confirm Deletion'}</h3>
-              <p className="text-brand-navy-dark/70 text-xs sm:text-sm leading-relaxed">
-                {lang === 'ar' ? 'هل أنت متأكد تماماً من رغبتك في حذف هذه المعاملة نهائياً؟ سيؤدي هذا الإجراء لإزالة كافة الملفات المرفوعة.' : 'Are you sure you want to permanently delete this application?'}
+              <h3 className="font-black text-rose-600 text-base sm:text-lg flex items-center gap-2">⚠️ {lang === 'ar' ? 'تأكيد الحذف الأمني للمعاملة' : 'Confirm Secure Deletion'}</h3>
+              <p className="text-brand-navy-dark/70 text-xs sm:text-sm leading-relaxed font-semibold">
+                {lang === 'ar' 
+                  ? 'هل أنت متأكد تماماً من رغبتك في حذف هذه المعاملة؟ سيؤدي هذا الإجراء لإزالة جميع الوثائق والملفات المرفوعة المرتبطة بها نهائياً من سحابة النظام ولا يمكن التراجع عنه.' 
+                  : 'Are you sure you want to permanently delete this application? This action will completely erase all associated files from the private cloud storage and cannot be undone.'}
               </p>
             </div>
             <div className="flex items-center gap-2.5 pt-2 text-xs font-black">
-              <button onClick={() => setDeleteTargetId(null)} className="flex-1 bg-gray-100 p-3 rounded-xl cursor-pointer">ألغاء</button>
-              <button onClick={executeDeleteApp} disabled={isPending} className="flex-1 bg-rose-600 text-white p-3 rounded-xl cursor-pointer disabled:opacity-50">
-                {isPending ? 'جاري الحذف...' : 'نعم، احذف نهائياً'}
+              <button onClick={() => setDeleteTargetId(null)} className="flex-1 bg-gray-100 hover:bg-gray-200 text-brand-navy-dark p-3 rounded-xl cursor-pointer transition-colors select-none">
+                {lang === 'ar' ? 'إلغاء الأمر' : 'Cancel'}
+              </button>
+              <button onClick={executeDeleteApp} disabled={isPending} className="flex-1 bg-rose-600 hover:bg-rose-700 text-white p-3 rounded-xl cursor-pointer disabled:opacity-50 transition-colors select-none">
+                {isPending ? (lang === 'ar' ? 'جاري الحذف الأمني...' : 'Deleting Safely...') : (lang === 'ar' ? 'نعم، احذف نهائياً' : 'Yes, Delete')}
               </button>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
+  ); 
 }
