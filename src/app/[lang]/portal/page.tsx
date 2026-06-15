@@ -430,7 +430,9 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
                       style={{ backgroundColor: currentColors.bg, borderColor: currentColors.border, color: currentColors.textCol }}>
                       {statusText}
                     </span>
-                    <DeleteAppButton appId={app.id} lang={lang} />
+<div data-app-id={app.id}>
+  <DeleteAppButton appId={app.id} lang={lang} />
+</div>
                   </div>
                 </div>
 
