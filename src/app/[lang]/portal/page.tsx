@@ -314,10 +314,11 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
     acc + (app?.displayedDocs?.filter((d: any) => d && d.status === 'rejected').length || 0), 0
   );
 
-  return (
+return (
     <main className={`min-h-screen bg-brand-light-bg py-12 md:py-20 px-3 sm:px-6 lg:px-8 text-start ${isRtl ? 'font-cairo' : 'font-sans'}`} dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 w-full">
         
+        {/* شريط الأدوات العلوي وتسجيل الخروج الآمن */}
         <div className="flex items-center justify-between gap-2 bg-white/60 border border-brand-navy-dark/[0.04] p-2 rounded-xl backdrop-blur-xs w-full">
           <Link 
             href={`/${lang}`}
@@ -340,6 +341,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
           </form>
         </div>
 
+        {/* معلومات المستثمر والهيدر الإستراتيجي */}
         <div className="border-b border-brand-navy-dark/10 pb-5 sm:pb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
           <div className="text-start">
             <h1 className="text-xl sm:text-3xl font-black text-brand-navy-dark tracking-tight mb-1.5 text-start">{t.title}</h1>
@@ -353,23 +355,7 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
           )}
         </div>
 
-        {/* 🌟 دمج مدير الطلبات التفاعلي والفاخر المحمي ضد أخطاء السيرفر */}
-        {userData && (
-          <ClientAppManager 
-            userId={userData.id}
-            lang={lang}
-            isRtl={isRtl}
-            availableServices={availableServices}
-            translations={{
-              submitNewApp: t.submitNewApp,
-              selectService: t.selectService,
-              btnApply: t.btnApply
-            }}
-          />
-        )}
-
-        <PortalNotification rejectedCount={rejectedDocs} lang={lang} />
-
+        {/* لوحة الإحصائيات الشاملة السريعة */}
         {processedApplications.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
             <div className="bg-white border border-brand-navy-dark/[0.05] rounded-xl p-3 shadow-2xs text-start">
@@ -399,153 +385,21 @@ export default async function ClientPortalPage({ params }: PortalPageProps) {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-5 sm:gap-8 w-full">
-          {processedApplications.map((app) => {
-            if (!app) return null;
-            const currentColors = statusColors[app.status as keyof typeof statusColors] || statusColors.pending;
-            const statusText = t.statuses[app.status as keyof typeof t.statuses] || t.statuses.pending;
+        {/* 🌟 استدعاء القائد التفاعلي الموحد وإعطاؤه الصلاحية الكاملة لرسم كروت المعاملات وحمايتها بمودال الحذف الفخم */}
+        {userData && (
+          <ClientAppManager 
+            userId={userData.id}
+            lang={lang}
+            isRtl={isRtl}
+            availableServices={availableServices}
+            processedApplications={processedApplications}
+            translations={t}
+            statusColors={statusColors}
+            docStatusStyles={docStatusStyles}
+          />
+        )}
 
-            return (
-              <div key={app.id} className="bg-white border border-brand-navy-dark/[0.05] rounded-xl p-4 sm:p-7 shadow-2xs relative overflow-hidden group text-start w-full">
-                <div className="absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-brand-gold to-brand-gold-hover" />
-                
-                <div className="mb-4 bg-brand-navy-dark/[0.015] p-2.5 rounded-lg border border-brand-navy-dark/[0.04] flex items-center justify-between gap-3 w-full text-start">
-                  <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-brand-navy-dark/60 text-start">
-                    <span className="w-1 h-1 bg-brand-gold rounded-full shrink-0" />
-                    <span className="truncate">{t.appIdLabel}:</span>
-                    <span className="font-mono text-brand-navy-dark font-extrabold bg-white border border-brand-navy-dark/5 px-2 py-0.5 rounded shadow-3xs uppercase select-all">
-                      {app.id.slice(0, 4)}...{app.id.slice(-4)}
-                    </span>
-                  </div>
-                  <ClientIdCopyButton id={app.id} lang={lang} />
-                </div>
-
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5 w-full text-start">
-                  <div className="text-start">
-                    <h3 className="text-base sm:text-xl font-black text-brand-navy-dark text-start">{app.serviceTitle}</h3>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
-                    <span className="px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold border tracking-wide shadow-3xs"
-                      style={{ backgroundColor: currentColors.bg, borderColor: currentColors.border, color: currentColors.textCol }}>
-                      {statusText}
-                    </span>
-<div data-app-id={app.id}>
-  <DeleteAppButton appId={app.id} lang={lang} />
-</div>
-                  </div>
-                </div>
-
-                {app.issued_document_url && (
-                  <div className="mb-5 bg-emerald-50 border border-emerald-200 text-emerald-900 p-3.5 sm:p-5 rounded-xl shadow-3xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 animate-fadeIn w-full text-start">
-                    <p className="font-bold text-xs sm:text-sm text-start leading-relaxed">
-                      {t.finalDocBanner}
-                    </p>
-                    <Link 
-                      href={app.issued_document_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="w-full sm:w-auto text-center text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-all cursor-pointer shadow-xs"
-                    >
-                      {t.downloadFinalDoc}
-                    </Link>
-                  </div>
-                )}
-
-                <div className="mb-5 bg-brand-light-bg/30 border border-brand-navy-dark/[0.02] rounded-xl p-3 sm:p-5 w-full text-start">
-                  <div className="flex justify-between items-center mb-3 text-[10px] sm:text-xs font-bold">
-                    <span className="text-brand-navy-dark/40">{t.progressText}</span>
-                    <span className="text-brand-navy-dark bg-brand-navy-dark/[0.04] px-2 py-0.5 rounded flex items-center gap-1 font-mono">
-                      <span className="text-brand-gold font-black">{app.progress || 0}%</span>
-                    </span>
-                  </div>
-                  <TransactionTimeline status={app.status} progress={app.progress} lang={lang} />
-                </div>
-
-                {app.notes && (
-                  <div className="bg-brand-navy-dark/[0.015] border border-brand-navy-dark/[0.03] rounded-lg p-3 text-xs text-brand-navy-dark/80 mb-5 text-start w-full">
-                    <span className="text-[10px] text-brand-navy-dark/40 block font-bold mb-1 text-start">{t.updateLabel}</span>
-                    <p className="leading-relaxed font-semibold text-start">{app.notes}</p>
-                  </div>
-                )}
-
-                {app.displayedDocs && app.displayedDocs.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-brand-navy-dark/[0.05] w-full text-start">
-                    <h4 className="text-xs sm:text-sm font-black text-brand-navy-dark mb-3 flex items-center gap-1.5 text-start">
-                      <span className="w-1 h-2.5 bg-brand-gold rounded-full inline-block" />
-                      {t.docsTitle}
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full text-start">
-                      {app.displayedDocs.map((doc: any) => {
-                        if (!doc) return null;
-                        const docName = lang === 'ar' ? doc.document_name_ar : doc.document_name_en;
-                        const docStatusText = t.statuses[doc.status as keyof typeof t.statuses] || t.statuses.pending;
-                        const styleClass = docStatusStyles[doc.status as keyof typeof docStatusStyles] || docStatusStyles.pending;
-                        const secureViewUrl = doc.file_url ? `/api/view-doc?url=${encodeURIComponent(doc.file_url)}` : '';
-
-                        return (
-                          <div key={doc.id} className="border border-brand-navy-dark/[0.04] rounded-lg p-3 flex flex-col justify-between bg-brand-light-bg/20 gap-2 w-full text-start">
-                            <div className="flex justify-between items-start gap-2 text-start w-full">
-                              <span className="text-[11px] font-bold text-brand-navy-dark/80 leading-tight text-start flex-1 min-w-0 truncate">{docName}</span>
-                              <span className={`px-2 py-0.5 rounded text-[9px] font-black border shrink-0 whitespace-nowrap ${styleClass}`}>
-                                {doc.file_url ? docStatusText : (lang === 'ar' ? 'مطلوب الرفع' : 'Required')}
-                              </span>
-                            </div>
-
-                            {doc.status === 'rejected' && (
-                              <div className="space-y-2 w-full text-start">
-                                {doc.rejection_reason && (
-                                  <div className="text-[10px] text-rose-700 bg-rose-50/70 p-2 rounded-lg border border-rose-100 font-semibold text-start">
-                                    <strong>{t.rejectionReason}</strong> {doc.rejection_reason}
-                                  </div>
-                                )}
-                                
-                                {secureViewUrl && (
-                                  <Link 
-                                    href={secureViewUrl} 
-                                    target="_blank" 
-                                    rel="noreferrer"
-                                    className="text-[10px] font-black text-brand-navy-dark hover:underline block text-center cursor-pointer"
-                                  >
-                                    {t.viewRejected}
-                                  </Link>
-                                )}
-                                <DocumentResubmitter docId={doc.id} appId={app.id} lang={lang} />
-                              </div>
-                            )}
-
-                            {doc.file_url && doc.status !== 'rejected' && (
-                              <Link 
-                                href={secureViewUrl} 
-                                target="_blank" 
-                                rel="noreferrer" 
-                                className="text-[10px] text-center font-bold text-brand-gold bg-brand-navy-dark hover:bg-brand-navy-light py-1.5 rounded-lg transition-colors mt-1 block shadow-xs cursor-pointer w-full"
-                              >
-                                {t.downloadDoc}
-                              </Link>
-                            )}
-
-                            {!doc.file_url && (
-                              <div className="mt-0.5 w-full">
-                                <DocumentResubmitter docId={doc.id} appId={app.id} lang={lang} />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                <div className={`mt-4 pt-3 border-t border-brand-navy-dark/[0.03] flex justify-end text-[10px] font-mono text-brand-navy-dark/40 ${isRtl ? 'text-left' : 'text-right'}`}>
-                  <span>{t.lastUpdate} {new Date(app.updated_at).toLocaleDateString(lang === 'ar' ? 'ar-AE' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                </div>
-
-              </div>
-            ); 
-          })}
-        </div>
       </div>
     </main>
   );   
-}
+} 
