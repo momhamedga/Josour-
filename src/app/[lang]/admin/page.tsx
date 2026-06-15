@@ -29,7 +29,7 @@ export default async function AdminDashboardPage({ params }: AdminPageProps) {
       a.created_at,        
       a.issued_document_url, 
       48 as sla_hours_limit, 
-      '[]'::json as fees,   
+      a.fees, -- 🌟 تم الاستبدال بجلب الحقل الحقيقي المباشر من الداتابيز بدلاً من التثبيت الفارغ
       COALESCE(
         (SELECT json_agg(d.* ORDER BY d.created_at ASC) FROM application_documents d WHERE d.application_id = a.id),
         '[]'::json

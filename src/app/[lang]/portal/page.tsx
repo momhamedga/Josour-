@@ -8,7 +8,6 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { logoutClientUser } from '@/app/actions/user-auth';
 
-import PortalNotification from './_components/PortalNotification';
 import ClientAppManager from './_components/ClientAppManager'; 
 import Link from 'next/link';
 
