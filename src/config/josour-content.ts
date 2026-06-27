@@ -5,7 +5,7 @@ export const siteContent = {
     dir: "rtl",
     nav: {
       about: "من نحن",
-      services: "خدماتنا",
+      services: "خدماتنا الاستشارية",
       track: "تتبع المعاملات",
       iso: "شهادات ISO",
       contact: "اتصل بنا",
@@ -13,13 +13,19 @@ export const siteContent = {
     },
     hero: {
       badge: "مستشارك الإداري المعتمد في دولة الإمارات",
-      title: "جسور الرائدة للاستشارات الإدارية وتأسيس الشركات",
+      title: "جسور انترناشيونال للأستشارات الإدارية",
       subtitle:
         "نمهد لك الطريق لتأسيس أعمالك وإصدار رخصتك التجارية في دبي وأبوظبي بكفاءة وسرعة مطلقة.",
       buttons: {
         request: "ابدأ تأسيس شركتك الآن",
         consult: "طلب استشارة مجانية",
       },
+    },
+    aboutSection: {
+      badge: "من نحن",
+      title: "جسور انترناشيونال للأستشارات الإدارية",
+      desc1: "نحن في جسور انترناشيونال شريكك الاستراتيجي الموثوق لتأسيس الشركات وتقديم الحلول الاستشارية والإدارية المتكاملة في دولة الإمارات العربية المتحدة. نمتلك شبكة علاقات وخبرة عميقة تمكننا من إنهاء الإجراءات الحكومية المعقدة بأعلى كفاءة وسرعة.",
+      desc2: "نهدف إلى تمكين المستثمرين ورجال الأعمال من إطلاق مشاريعهم بثقة، وتوفير الدعم الإداري والقانوني والفني ابتداءً من الفكرة وحتى إصدار الرخص ومتابعة التشغيل عبر بواباتنا الذكية.",
     },
     servicesSection: {
       title: "خدماتنا الاستشارية المتكاملة",
@@ -72,7 +78,7 @@ export const siteContent = {
             "تسويق عقاري",
             "تحصيل الإيجارات",
           ],
-          href: "/services/realestate", // 🚀 تم التوجيه للمسار الجديد المستقل
+          href: "/services/realestate",
         },
         {
           id: "track",
@@ -96,7 +102,7 @@ export const siteContent = {
             "التدقيق والتحليل",
             "التأهيل للاعتماد",
           ],
-          href: "/services/vipiso", // 🚀 تم التوجيه للمسار الفعلي الجديد
+          href: "/services/vipiso",
         },
         {
           id: "icv",
@@ -108,7 +114,7 @@ export const siteContent = {
             "تحسين التقييم",
             "مراجعة الميزانيات",
           ],
-          href: "/services/icv", // 🚀 تم التوجيه للمسار الفعلي الجديد المستقل
+          href: "/services/icv",
         },
         {
           id: "vip_web",
@@ -120,44 +126,44 @@ export const siteContent = {
             "تكامل مع بوابات الدفع والخدمات",
             "تحسين محركات البحث (SEO) للنطاق المحلي",
           ],
-          href: "/services/vip-web", // 🚀 تم التوجيه للمسار الفعلي الجديد
+          href: "/services/vip-web",
         },
       ],
     },
     consultationModal: {
-  title: "طلب استشارة مجانية",
-  subtitle: "خطوات بسيطة تفصلك عن التحدث مع مستشارينا الإداريين",
-  steps: ["نوع الخدمة", "تفاصيل الاتصال", "تأكيد الطلب"],
-  next: "التالي",
-  prev: "السابق",
-  submit: "إرسال الطلب",
-  successTitle: "تم استلام طلبك بنجاح!",
-  successDesc: "سيتواصل معك أحد مستشارينا الإداريين خلال أقل من 15 دقيقة.",
-  close: "إغلاق",
-  fields: {
-    serviceType: "ما هو نوع الخدمة المطلوبة؟",
-    corporate: "تأسيس شركات ورخص تجارية",
-    visas: "إقامات وتأشيرات المستثمرين",
-    iso: "شهادات ISO والقيمة المضافة",
-    web: "تطوير المواقع والحلول الرقمية",
-    name: "الاسم الكامل",
-    namePlaceholder: "أدخل اسمك الكريم",
-    phone: "رقم الهاتف (واتساب)",
-    phonePlaceholder: "مثال: 501234567",
-    email: "البريد الإلكتروني",
-    emailPlaceholder: "name@company.com"
-  }
-},
+      title: "صمم مسارك الاستشاري في الإمارات",
+      subtitle: "خطوات بسيطة تفصلك عن التحدث مع مستشارينا الإداريين",
+      steps: ["نوع الخدمة", "تفاصيل الاتصال", "تأكيد الطلب"],
+      next: "التالي",
+      prev: "السابق",
+      submit: "إرسال الطلب البدء",
+      successTitle: "تم استلام طلبك بنجاح!",
+      successDesc: "سيتواصل معك أحد مستشارينا الإداريين عبر الواتساب أو الهاتف خلال أقل من 15 دقيقة.",
+      close: "إغلاق",
+      fields: {
+        serviceType: "ما هو نوع الخدمة المطلوبة؟",
+        corporate: "تأسيس شركات ورخص تجارية",
+        visas: "إقامات وتأشيرات المستثمرين",
+        iso: "شهادات ISO والقيمة المضافة",
+        web: "تطوير المواقع والحلول الرقمية",
+        name: "الاسم الكامل",
+        namePlaceholder: "أدخل اسمك الكريم",
+        phone: "رقم الهاتف (واتساب)",
+        phonePlaceholder: "مثال: 557983500",
+        email: "البريد الإلكتروني",
+        emailPlaceholder: "name@company.com"
+      }
+    },
     footer: {
-      desc: "جسر الاستدامة والتميز لأعمالك في دولة الإمارات العربية المتحدة.",
-      rights: "© 2026 جسور الدولية للاستشارات الإدارية. جميع الحقوق محفوظة.",
+      desc: "جسر الاستدامة والتميز لأعمالكم في دولة الإمارات العربية المتحدة.",
+      rights: "© 2026 جسور انترناشيونال للأستشارات الإدارية. جميع الحقوق محفوظة.",
     },
   },
   en: {
     dir: "ltr",
     nav: {
       about: "About Us",
-      services: "Services",
+      services: "Advisory Services",
       track: "Track Applications",
       iso: "ISO Certificates",
       contact: "Contact Us",
@@ -165,13 +171,19 @@ export const siteContent = {
     },
     hero: {
       badge: "Your Certified Management Consultant in the UAE",
-      title: "Josour International Corporate Setup & Consultancy",
+      title: "jusoor international management consulting",
       subtitle:
         "Paving the way to establish your business and issue your trade license in Dubai & Abu Dhabi with absolute efficiency.",
       buttons: {
         request: "Start Your Business Now",
         consult: "Request Free Consultation",
       },
+    },
+    aboutSection: {
+      badge: "About Us",
+      title: "jusoor international management consulting",
+      desc1: "At Jusoor International, we are your trusted strategic partner for corporate setup and integrated management and administrative consulting solutions in the UAE. We possess a deep network of relationships and expertise that enables us to complete complex government procedures with ultimate efficiency and speed.",
+      desc2: "We aim to empower investors and entrepreneurs to launch their projects with high confidence, providing comprehensive administrative, legal, and technical support from initial concept to license issuance and operational tracking through our smart portals.",
     },
     servicesSection: {
       title: "Our Integrated Advisory Services",
@@ -224,7 +236,7 @@ export const siteContent = {
             "Real Estate Marketing",
             "Rent Collection",
           ],
-          href: "/services/realestate", // 🚀 Updated to the new standalone path
+          href: "/services/realestate",
         },
         {
           id: "track",
@@ -248,7 +260,7 @@ export const siteContent = {
             "Auditing & Analysis",
             "Accreditation Setup",
           ],
-          href: "/services/vipiso", // 🚀 تم التوجيه للمسار الفعلي الجديد
+          href: "/services/vipiso",
         },
         {
           id: "icv",
@@ -260,7 +272,7 @@ export const siteContent = {
             "Score Optimization",
             "Financial Review",
           ],
-          href: "/services/icv", // 🚀 Updated to the new standalone path
+          href: "/services/icv",
         },
         {
           id: "vip_web",
@@ -272,37 +284,37 @@ export const siteContent = {
             "Integration with Payments & APIs",
             "Advanced Local SEO Optimization",
           ],
-          href: "/services/vip-web", // 🚀 تم التوجيه للمسار الفعلي الجديد
+          href: "/services/vip-web",
         },
       ],
-    },consultationModal: {
-  title: "Request Free Consultation",
-  subtitle: "A few simple steps separate you from speaking with our consultants",
-  steps: ["Service Type", "Contact Info", "Confirmation"],
-  next: "Next",
-  prev: "Previous",
-  submit: "Submit Request",
-  successTitle: "Request Received Successfully!",
-  successDesc: "One of our management consultants will contact you within 15 minutes.",
-  close: "Close",
-  fields: {
-    serviceType: "What type of service do you require?",
-    corporate: "Company Setup & Trade Licenses",
-    visas: "Investor Visas & Residencies",
-    iso: "ISO Certificates & ICV",
-    web: "VIP Web Design & Digital Solutions",
-    name: "Full Name",
-    namePlaceholder: "Enter your full name",
-    phone: "Phone Number (WhatsApp)",
-    phonePlaceholder: "e.g., 501234567",
-    email: "Email Address",
-    emailPlaceholder: "name@company.com"
-  }
-},
+    },
+    consultationModal: {
+      title: "Design Your Advisory Path in the UAE",
+      subtitle: "A few simple steps separate you from speaking with our consultants",
+      steps: ["Service Type", "Contact Info", "Confirmation"],
+      next: "Next",
+      prev: "Previous",
+      submit: "Submit and Initiate",
+      successTitle: "Request Received Successfully!",
+      successDesc: "One of our management consultants will contact you via WhatsApp or phone call within 15 minutes.",
+      close: "Close",
+      fields: {
+        serviceType: "What type of service do you require?",
+        corporate: "Company Setup & Trade Licenses",
+        visas: "Investor Visas & Residencies",
+        iso: "ISO Certificates & ICV",
+        web: "VIP Web Design & Digital Solutions",
+        name: "Full Name",
+        namePlaceholder: "Enter your full name",
+        phone: "Phone Number (WhatsApp)",
+        phonePlaceholder: "e.g., 557983500",
+        email: "Email Address",
+        emailPlaceholder: "name@company.com"
+      }
+    },
     footer: {
       desc: "Your bridge to sustainability and corporate excellence in the United Arab Emirates.",
-      rights:
-        "© 2026 Josour International Management Consultancy. All rights reserved.",
+      rights: "© 2026 jusoor international management consulting. All rights reserved.",
     },
   },
 };

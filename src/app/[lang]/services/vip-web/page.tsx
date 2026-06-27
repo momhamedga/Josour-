@@ -1,3 +1,4 @@
+'use client';
 
 import { use } from 'react';
 import VipWebSection from './vip_webSection';
@@ -7,10 +8,11 @@ interface PageProps {
 }
 
 export default function VipWebServicesPage({ params }: PageProps) {
+  // فك الـ Promise بأمان باستخدام use()
   const unwrappedParams = use(params);
-  const currentLang = unwrappedParams.lang;
 
   return (
-    <VipWebSection lang={currentLang} />
+    // 🌟 الإصلاح الجذري: تمرير الكائن كـ params بالكامل ليتوافق مع واجهة المكون الابن
+    <VipWebSection params={{ lang: unwrappedParams.lang }} />
   );
 }

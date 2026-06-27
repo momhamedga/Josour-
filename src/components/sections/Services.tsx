@@ -3,42 +3,26 @@
 import Link from "next/link";
 import { siteContent, Language } from "@/config/josour-content";
 import {
-  Building2,
-  UserCheck,
-  Crown,
-  Home,
-  Layers,
-  Award,
-  BarChart3,
-  CheckCircle2,
-  Laptop,
+  Building2, UserCheck, Crown, Home, Layers,
+  Award, BarChart3, Laptop, ArrowUpRight, Sparkles,
 } from "lucide-react";
 
 interface ServicesProps {
   lang: Language;
 }
 
-// دالة مساعدة نقية لربط الخدمات بالأيقونات دون حقن كلاسات ألوان تتعارض مع حركات الـ Hover
 const getIcon = (id: string) => {
+  const iconClasses = "transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 w-5 h-5 md:w-6 md:h-6";
   switch (id) {
-    case "gov":
-      return <Building2 size={20} className="transition-all duration-300 md:w-[24px] md:h-[24px]" />;
-    case "visa":
-      return <UserCheck size={20} className="transition-all duration-300 md:w-[24px] md:h-[24px]" />;
-    case "vip":
-      return <Crown size={20} className="transition-all duration-300 md:w-[24px] md:h-[24px]" />;
-    case "realestate":
-      return <Home size={20} className="transition-all duration-300 md:w-[24px] md:h-[24px]" />;
-    case "track":
-      return <Layers size={20} className="transition-all duration-300 md:w-[24px] md:h-[24px]" />;
-    case "iso":
-      return <Award size={20} className="transition-all duration-300 md:w-[24px] md:h-[24px]" />;
-    case "icv":
-      return <BarChart3 size={20} className="transition-all duration-300 md:w-[24px] md:h-[24px]" />;
-    case "vip_web":
-      return <Laptop size={20} className="transition-all duration-300 md:w-[24px] md:h-[24px]" />;
-    default:
-      return <Building2 size={20} className="transition-all duration-300 md:w-[24px] md:h-[24px]" />;
+    case "gov": return <Building2 className={iconClasses} />;
+    case "visa": return <UserCheck className={iconClasses} />;
+    case "vip": return <Crown className={iconClasses} />;
+    case "realestate": return <Home className={iconClasses} />;
+    case "track": return <Layers className={iconClasses} />;
+    case "iso": return <Award className={iconClasses} />;
+    case "icv": return <BarChart3 className={iconClasses} />;
+    case "vip_web": return <Laptop className={iconClasses} />;
+    default: return <Building2 className={iconClasses} />;
   }
 };
 
@@ -47,85 +31,65 @@ export default function Services({ lang }: ServicesProps) {
   const isRtl = lang === "ar";
 
   return (
-    <section
-      id="services"
-      className="py-16 md:py-24 bg-brand-light-bg relative overflow-hidden px-4 sm:px-6 border-t border-brand-gold/10 font-cairo"
-      dir={isRtl ? "rtl" : "ltr"}
-    >
-      {/* 📐 لمسة توهج خلفية محيطية ناعمة معتمدة على OKLCH لثيم لعام 2026 */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[600px] md:max-w-[800px] h-[600px] md:h-[800px] bg-brand-gold/5 rounded-full blur-[140px] md:blur-[160px] pointer-events-none z-0" />
+    <section id="services" className="py-20 md:py-32 bg-[#040912] text-white relative overflow-hidden px-4 sm:px-6 border-t border-brand-gold/15 font-cairo" dir={isRtl ? "rtl" : "ltr"}>
+      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-brand-navy-dark/40 rounded-full blur-[120px] pointer-events-none z-0" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-brand-gold/5 rounded-full blur-[150px] pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-[radial-gradient(oklch(0.76_0.11_85_/_0.04)_1px,transparent_1px)] [background-size:32px_32px] opacity-70 pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto relative z-10 w-full">
-        
-        {/* 🏛️ رأس القسم: عنوان استشاري فخم مفرود ومتمركز تماماً في منتصف الشاشة */}
-        <div className="text-center max-w-3xl mx-auto mb-14 md:mb-20 flex flex-col items-center justify-center">
-          <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-brand-navy-dark mb-4 tracking-tight px-2 text-center">
-            {t.title}
+      <div className="max-w-7xl mx-auto relative z-10 w-full space-y-16 md:space-y-24">
+        <div className="text-center max-w-3xl mx-auto flex flex-col items-center justify-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-gold/10 border border-brand-gold/20 text-brand-gold text-[10px] md:text-xs font-black tracking-widest uppercase shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+            <Sparkles size={12} className="animate-pulse" />
+            <span>{isRtl ? "مستقبلك الاستثماري المضمون" : "Your Secure Investment Route"}</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-black text-white tracking-tight px-2 leading-[1.15] text-center">
+            {isRtl ? "منظومة حلولنا" : "Our Advisory"}{" "}
+            <span className="bg-gradient-to-r from-brand-gold via-[#fff] to-brand-gold bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(212,175,55,0.15)]">
+              {t.title}
+            </span>
           </h2>
-          <div className="w-16 md:w-24 h-1 bg-gradient-to-r from-brand-gold via-brand-gold-hover to-brand-gold mb-5 md:mb-6 rounded-full mx-auto" />
-          <p className="text-brand-navy-dark/75 text-xs sm:text-sm md:text-lg font-medium leading-relaxed px-4 text-center">
-            {t.subtitle}
-          </p>
         </div>
 
-        {/* 💎 مصفوفة شبكة الخدمات (Grid System) بنظام الحجم المرن الملموم للموبيلات */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 items-stretch w-full">
-          {t.items.map((service) => {
-            // بناء مسار التوجيه الدولي الذكي ليدعم لغات النطاقات والمسارات الداخلية
-            const targetHref = service.href.startsWith("/")
-              ? `/${lang}${service.href}`
-              : service.href;
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch w-full">
+          {t.items.map((service, index) => {
+            // منطق التوجيه الذكي
+            let targetHref = `https://wa.me/971557983500?text=${encodeURIComponent(isRtl ? `مرحباً، أود الاستفسار عن خدمة: ${service.title}` : `Hello, I want to inquire about: ${service.title}`)}`;
+            let isInternalLink = false;
+
+            const routeMap: Record<string, string> = {
+              "gov": `/${lang}/portal`,
+              "iso": `/${lang}/services/vipiso`,
+              "vip_web": `/${lang}/services/vip-web`,
+              "track": `/${lang}/#track`,
+              "icv": `/${lang}/services/icv`,
+              "vip": `/${lang}/services/vip`,
+              "realestate": `/${lang}/services/realestate`
+            };
+
+            if (routeMap[service.id]) {
+              targetHref = routeMap[service.id];
+              isInternalLink = true;
+            }
 
             return (
-              <Link
-                key={service.id}
-                href={targetHref || "#contact"}
-                target="_self"
-                className="group p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white border border-brand-gold/15 shadow-2xs flex flex-col justify-between relative overflow-hidden transition-all duration-500 md:hover:shadow-xl md:hover:border-brand-gold/40 md:hover:-translate-y-1 h-full pointer-events-auto min-h-[290px] sm:min-h-[340px] md:min-h-[360px]"
-              >
-                {/* إشعاع سائل تفاعلي يظهر خفياً خلف محتوى الكارت عند تحويم ماوس الكمبيوتر */}
-                <div className="absolute inset-0 bg-gradient-to-br from-brand-gold/[0.015] via-transparent to-transparent opacity-0 md:group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-
-                {/* المحتوى العلوي للبطاقة */}
-                <div className="relative z-10 w-full flex flex-col items-start text-start flex-1">
-                  
-                  {/* رأس الكارت: صندوق أيقونة ملموم وعنوان متناسق لخط القاهرة */}
-                  <div className="flex items-center justify-start gap-3 sm:gap-4 mb-4 sm:mb-6 w-full text-start">
-                    {/* صندوق الأيقونة المتفاعل: حجم متجاوب ذكي جداً لـ 2026 */}
-                    <div className="bg-brand-navy-dark text-brand-gold p-2.5 sm:p-3.5 rounded-xl shadow-xs transition-all duration-500 shrink-0 md:group-hover:bg-brand-gold md:group-hover:text-brand-navy-dark md:group-hover:scale-105">
+              <div key={service.id} className="group relative rounded-[2rem] bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/10 p-6 flex flex-col justify-between transition-all duration-500 hover:border-brand-gold/50 overflow-hidden min-h-[360px]">
+                <div className="relative z-10 w-full space-y-6">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/10 text-brand-gold flex items-center justify-center group-hover:bg-brand-gold group-hover:text-brand-navy-dark">
                       {getIcon(service.id)}
                     </div>
-                    <h3 className="text-base sm:text-lg md:text-xl font-black text-brand-navy-dark transition-colors duration-300 md:group-hover:text-brand-gold leading-tight text-start">
-                      {service.title}
-                    </h3>
+                    <span className="text-4xl font-mono font-black text-white/5">{String(index + 1).padStart(2, '0')}</span>
                   </div>
-
-                  {/* وصف الخدمة التفصيلي النظيف والمريح للقراءة بحجم ملموم على الجوال */}
-                  <p className="text-brand-navy-dark/70 text-[11px] sm:text-xs md:text-sm leading-relaxed font-medium mb-4 sm:mb-6 w-full text-start">
-                    {service.desc}
-                  </p>
+                  <h3 className="text-lg font-black text-white group-hover:text-brand-gold transition-colors">{service.title}</h3>
+                  <p className="text-gray-400 text-xs leading-relaxed">{service.desc}</p>
                 </div>
-
-                {/* 🛠️ المحتوى السفلي: المميزات الفرعية ناعمة وصغيرة ومحاذية بدقة متناهية */}
-                <div className="relative z-10 border-t border-brand-navy-dark/[0.04] pt-4 sm:pt-5 mt-auto w-full">
-                  <ul className="grid grid-cols-2 gap-2 sm:gap-3 w-full text-start">
-                    {service.features.map((feature, idx) => (
-                      <li
-                        key={idx}
-                        className="flex items-center justify-start gap-1.5 text-[10px] sm:text-xs font-bold text-brand-navy-dark/75 min-w-0 text-start"
-                      >
-                        <CheckCircle2
-                          size={11}
-                          className="text-brand-gold shrink-0 sm:w-[13px] sm:h-[13px]"
-                        />
-                        <span className="truncate w-full block select-none text-start">
-                          {feature}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="relative z-10 pt-6 mt-6 border-t border-white/5">
+                  <Link href={targetHref} target={isInternalLink ? "_self" : "_blank"} rel={isInternalLink ? undefined : "noopener noreferrer"} className="w-full bg-white/[0.02] hover:bg-brand-gold hover:text-black text-white border border-white/10 py-3 rounded-xl text-center flex items-center justify-center gap-2 text-xs font-black transition-all">
+                    <span>{isRtl ? "ابدأ الآن" : "Initiate Strategy"}</span>
+                    <ArrowUpRight size={14} />
+                  </Link>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>

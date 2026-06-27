@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { 
   ArrowLeft, ArrowRight, ShieldCheck, 
   Home, Layers, CheckCircle2, 
-  Building, Key, ShieldAlert,
+  Building, Key, 
   ArrowUpRight, Radio, Landmark
 } from 'lucide-react';
 
@@ -40,7 +40,7 @@ export default function VipRealEstatePage({ params }: VipRealEstatePageProps) {
       title: 'الخدمات العقارية الفاخرة وحوكمة إدارة الأملاك',
       subtitle: 'منظومة متكاملة لإدارة وتأجير الأصول العقارية والتجارية والسكنية في دولة الإمارات. نحن لا ندير مجرد عقارات؛ بل نحمي استثماراتكم ونضمن تعظيم العوائد الإيجارية وتحصيلها بأعلى معايير الحوكمة لعام 2026.',
       backBtn: 'العودة للمركز الرئيسي',
-      ctaBtn: 'طلب تفويض إدارة محفظة عقارية',
+      ctaBtn: 'طلب تفويض إدارة محفظة عقارية عبر الواتساب',
       philosophyTitle: 'ركائز الحوكمة العقارية المستدامة',
       philosophyDesc: 'معايير تشغيلية صارمة تضمن الحفاظ على القيمة السوقية للأصول العقارية وتدفق العوائد بدون أي هدر.',
       processTitle: 'بروتوكول الإشراف والتشغيل العقاري',
@@ -49,7 +49,7 @@ export default function VipRealEstatePage({ params }: VipRealEstatePageProps) {
       frameworkLabel: 'بروتوكول دائرة الأراضي والأملاك // معايير مؤسسية 2026',
       pillars: [
         { icon: <Landmark size={26} />, title: 'حوكمة تحصيل الإيجارات', desc: 'نظم أتمتة مالية متطورة تضمن تحصيل الإيجارات وإيداعها في حساباتكم بدقة متناهية وبدون أي تأخير عملياتي.' },
-        { icon: <Building size={26} />, title: 'تسويق وإشغال استراتيجي', desc: 'استهداف النخبة من المستأجرين الأفراد والشركات لرفع نسب الإشغال وتقليل فترات خلو الأصول العقارية.' },
+        { icon: <Building size={26} />, title: 'تسويق وإشغال استراتيجي', desc: 'استهدف النخبة من المستأجرين الأفراد والشركات لرفع نسب الإشغال وتقليل فترات خلو الأصول العقارية.' },
         { icon: <Key size={26} />, title: 'إدارة التعاقدات القانونية', desc: 'صياغة وتوثيق عقود الإيجار (إيجاري) ومتابعة الالتزامات القانونية واللوائح التنظيمية الحكومية المعمول بها.' },
         { icon: <Layers size={26} />, title: 'الصيانة الوقائية الفورية', desc: 'إشراف فني مستمر على العقارات وإدارة عمليات الصيانة الدورية للحفاظ على الهيكل الإنشائي والقيمة السوقية للأصل.' }
       ] as Pillar[],
@@ -68,7 +68,7 @@ export default function VipRealEstatePage({ params }: VipRealEstatePageProps) {
       ] as Spec[]
     },
     en: {
-      badge: 'REAL ESTATE ASSET MANAGMENT 2026 // SOVEREIGN ARCHITECTURE',
+      badge: 'REAL ESTATE ASSET MANAGEMENT 2026 // SOVEREIGN ARCHITECTURE',
       title: 'Premium Real Estate Solutions & Property Governance',
       subtitle: 'An integrated ecosystem for managing and leasing premium commercial and residential real estate assets across the UAE. We secure your investments and guarantee optimized rental yields under strict 2026 governance.',
       backBtn: 'Return to Command Center',
@@ -101,25 +101,23 @@ export default function VipRealEstatePage({ params }: VipRealEstatePageProps) {
     }
   }[lang];
 
+  // تشفير وحقن رسالة الواتساب السحابية المباشرة بدقة للقسم العقاري
+  const whatsappUrl = `https://wa.me/971557983500?text=${encodeURIComponent(isRtl ? 'مرحباً جسور انترناشيونال، نود الاستفسار وتفويضكم لإدارة وتشغيل محفظتنا العقارية في دولة الإمارات' : 'Hello Josour International, I want to request a premium property portfolio management asset auditing framework.')}`;
+
   return (
     <div 
       className="w-full bg-brand-light-bg text-brand-navy-dark relative min-h-screen font-cairo selection:bg-brand-gold/30 selection:text-brand-navy-dark overflow-x-hidden flex flex-col items-center"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* 📐 المخطط الهندسي الخلفي الدقيق */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.025] bg-[linear-gradient(to_right,rgba(0,0,0,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.1)_1px,transparent_1px)] bg-[size:60px_60px] animate-[gridSmoothMove_40s_linear_infinite]" />
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.025] bg-[linear-gradient(to_right,rgba(0,0,0,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.1)_1px,transparent_1px)] bg-[size:60px_60px]" />
 
-      {/* 🔮 الهالات الضوئية المستمرة المحيطية لثيم OKLCH الفخم */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[75vw] h-[50vh] rounded-full blur-[150px] pointer-events-none z-0 mix-blend-multiply animate-pulse" style={{ backgroundColor: 'oklch(0.76 0.11 85 / 0.14)' }} />
-      <div className="absolute top-[35%] right-[-10%] w-[60vw] h-[60vh] rounded-full blur-[180px] pointer-events-none z-0 mix-blend-multiply" style={{ backgroundColor: 'oklch(0.24 0.05 250 / 0.05)' }} />
-      <div className="absolute bottom-0 left-[-5%] w-[65vw] h-[65vh] rounded-full blur-[190px] pointer-events-none z-0 mix-blend-multiply" style={{ backgroundColor: 'oklch(0.76 0.11 85 / 0.08)' }} />
-
-      {/* [Top Navigation]: زر العودة المستقر والمفتوح تماماً لفتح نفس الصفحة */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[75vw] h-[50vh] rounded-full blur-[150px] pointer-events-none z-0 opacity-20 bg-brand-gold" />
+      
       <nav className="max-w-7xl w-full mx-auto px-6 sm:px-8 lg:px-12 pt-8 relative z-10 flex flex-col items-center">
         <div className="w-full flex justify-start">
           <Link
             href={`/${lang}`}
-            className="inline-flex items-center justify-center gap-2.5 text-xs font-bold px-6 py-4 rounded-xl bg-white border border-brand-navy-dark/10 shadow-sm text-brand-navy-dark/70 transition-all duration-300 md:hover:text-brand-gold md:hover:border-brand-gold/40 md:hover:shadow-md md:hover:-translate-y-0.5 active:translate-y-0 group cursor-pointer"
+            className="inline-flex items-center justify-center gap-2.5 text-xs font-bold px-6 py-4 rounded-xl bg-white border border-brand-navy-dark/10 shadow-3xs text-brand-navy-dark/70 transition-all duration-300 md:hover:text-brand-gold md:hover:border-brand-gold/40 md:hover:shadow-md md:hover:-translate-y-0.5 group cursor-pointer"
           >
             {isRtl ? <ArrowRight size={15} className="md:group-hover:-translate-x-1 transition-transform duration-300 shrink-0" /> : <ArrowLeft size={15} className="md:group-hover:translate-x-1 transition-transform duration-300 shrink-0" />}
             <span>{t.backBtn}</span>
@@ -127,59 +125,57 @@ export default function VipRealEstatePage({ params }: VipRealEstatePageProps) {
         </div>
       </nav>
 
-      {/* 👑 [Section 1]: الهيرو سيكشن العقاري الفخم - مفرود ومحرر كلياً من خنقة خطوط المتصفح */}
       <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-20 md:py-28 flex flex-col items-center text-center relative z-10 border-b border-brand-navy-dark/[0.03] justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center space-y-8 max-w-4xl animate-fadeInUp">
-          
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-brand-gold/30 shadow-2xs">
+        <div className="flex flex-col items-center space-y-8 max-w-4xl">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-brand-gold/30 shadow-3xs">
             <Radio size={12} className="text-brand-gold animate-pulse" />
-            <span className="text-[10px] md:text-xs font-bold tracking-widest uppercase text-brand-navy-dark">
+            <span className="text-[10px] md:text-xs font-bold tracking-widest uppercase text-brand-navy-dark rtl:text-right ltr:text-left">
               {t.badge}
             </span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[4.8rem] font-black text-brand-navy-dark leading-[1.15] tracking-tight max-w-4xl">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-brand-navy-dark leading-[1.15] tracking-tight max-w-4xl text-center">
             {t.title}
           </h1>
 
-          <p className="text-sm md:text-base lg:text-lg text-brand-navy-light/80 font-medium leading-relaxed max-w-3xl px-2">
+          <p className="text-sm md:text-base lg:text-lg text-brand-navy-light/80 font-medium leading-relaxed max-w-3xl px-2 text-center">
             {t.subtitle}
           </p>
 
-          {/* زر الهيرو الفخم: مساحة تباعد عمودية مريحة py-5 و px-12 معزولة وتتحرك بسلاسة طلقة */}
           <div className="pt-8 w-full sm:w-auto flex justify-center px-4">
             <Link 
-              href="#contact"
-              className="group w-full sm:w-auto inline-flex items-center justify-center gap-4 bg-brand-navy-dark text-white px-12 py-5 rounded-xl font-bold text-base tracking-wide shadow-xl shadow-brand-navy-dark/20 transition-all duration-300 cursor-pointer md:hover:bg-brand-gold md:hover:text-brand-navy-dark md:hover:-translate-y-1 md:hover:shadow-brand-gold/20 active:scale-[0.98]"
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group w-full sm:w-auto inline-flex items-center justify-center gap-4 bg-brand-navy-dark text-white px-12 py-5 rounded-xl font-bold text-base tracking-wide shadow-xl shadow-brand-navy-dark/20 transition-all duration-300 cursor-pointer md:hover:bg-brand-gold md:hover:text-brand-navy-dark md:hover:-translate-y-1 md:hover:shadow-brand-gold/30 active:scale-[0.98]"
             >
-              <span className="transition-colors duration-300 select-none">{t.ctaBtn}</span>
+              <span className="transition-colors duration-300 select-none text-center">{t.ctaBtn}</span>
               <Home size={22} className="text-brand-gold transition-all duration-300 shrink-0 md:group-hover:text-brand-navy-dark md:group-hover:scale-105" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* 🏛️ [Section 2]: ركائز ومحاور الحوكمة العقارية - بطاقات متزنة الارتفاع min-h-[380px] وتأثيرات حركية للكمبيوتر */}
       <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-24 md:py-32 relative z-10 border-b border-brand-navy-dark/[0.03]">
         <div className="text-center space-y-4 mb-20">
-          <h2 className="text-2xl md:text-4xl font-black text-brand-navy-dark">{t.philosophyTitle}</h2>
-          <p className="text-xs md:text-sm font-semibold text-brand-navy-light/50 max-w-xl mx-auto">{t.philosophyDesc}</p>
+          <h2 className="text-2xl md:text-4xl font-black text-brand-navy-dark text-center">{t.philosophyTitle}</h2>
+          <p className="text-xs md:text-sm font-semibold text-brand-navy-light/50 max-w-xl mx-auto text-center">{t.philosophyDesc}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 w-full">
           {t.pillars.map((item, idx) => (
             <div 
               key={idx} 
-              className={`bg-white border border-brand-navy-dark/[0.04] p-8 md:p-12 rounded-[2rem] shadow-sm flex flex-col text-center ${isRtl ? 'md:text-right md:items-start' : 'md:text-left md:items-start'} items-center justify-between min-h-[390px] md:min-h-[380px] relative overflow-hidden transition-all duration-300 md:hover:border-brand-gold/40 md:hover:shadow-xl md:hover:-translate-y-1 group cursor-default`}
+              className="bg-white border border-brand-navy-dark/[0.04] p-8 md:p-12 rounded-[2rem] shadow-3xs flex flex-col justify-between min-h-[390px] md:min-h-[380px] relative overflow-hidden transition-all duration-300 md:hover:border-brand-gold/40 md:hover:shadow-xl md:hover:-translate-y-1 group cursor-default"
             >
               <div className="w-full flex flex-col items-center md:items-start text-center md:text-start">
                 <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-8 border bg-brand-light-bg border-brand-gold/20 text-brand-gold shadow-inner md:group-hover:scale-110 md:group-hover:bg-brand-gold/10 transition-all duration-300 shrink-0">
                   {item.icon}
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-brand-navy-dark md:hover:text-brand-gold transition-colors duration-300">{item.title}</h3>
-                <p className="text-sm md:text-base leading-relaxed font-medium text-brand-navy-light/60">{item.desc}</p>
+                <h3 className="text-2xl font-bold mb-4 text-brand-navy-dark group-hover:text-brand-gold transition-colors duration-300 text-start w-full rtl:text-right ltr:text-left">{item.title}</h3>
+                <p className="text-sm md:text-base leading-relaxed font-medium text-brand-navy-light/60 text-start w-full rtl:text-right ltr:text-left">{item.desc}</p>
               </div>
-              <div className="w-full border-t border-brand-navy-dark/[0.03] pt-5 mt-8 text-start flex justify-between items-center">
+              <div className="w-full border-t border-brand-navy-dark/[0.03] pt-5 mt-8 flex justify-between items-center">
                 <span className="text-[10px] font-mono tracking-widest text-brand-gold font-bold">RE_MATRIX_0{idx+1}</span>
                 <span className="w-0 h-[2px] bg-brand-gold md:group-hover:w-16 transition-all duration-500 hidden md:block" />
               </div>
@@ -188,18 +184,17 @@ export default function VipRealEstatePage({ params }: VipRealEstatePageProps) {
         </div>
       </section>
 
-      {/* 💎 [Section 3]: مسار الخطوات التشغيلية والإشراف - كروت Bento متكاملة الروح والمساحات الحرة */}
       <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-24 md:py-32 relative z-10 border-b border-brand-navy-dark/[0.03]">
         <div className="text-center space-y-4 mb-20">
-          <h2 className="text-2xl md:text-4xl font-black text-brand-navy-dark">{t.processTitle}</h2>
-          <p className="text-xs md:text-sm font-semibold text-brand-navy-light/50 max-w-xl mx-auto">{t.processDesc}</p>
+          <h2 className="text-2xl md:text-4xl font-black text-brand-navy-dark text-center">{t.processTitle}</h2>
+          <p className="text-xs md:text-sm font-semibold text-brand-navy-light/50 max-w-xl mx-auto text-center">{t.processDesc}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 w-full">
           {t.steps.map((step, idx) => (
             <div 
               key={idx}
-              className="bg-white/95 backdrop-blur-xl border border-brand-navy-dark/[0.04] p-8 md:p-12 rounded-[2rem] shadow-sm flex flex-col justify-between items-start text-start relative overflow-hidden min-h-[300px] md:min-h-[260px] transition-all duration-500 md:hover:border-brand-gold/40 md:hover:shadow-2xl md:hover:-translate-y-1.5 group lg:col-span-1"
+              className="bg-white/95 backdrop-blur-xl border border-brand-navy-dark/[0.04] p-8 md:p-12 rounded-[2rem] shadow-3xs flex flex-col justify-between items-start text-start relative overflow-hidden min-h-[300px] md:min-h-[260px] transition-all duration-500 md:hover:border-brand-gold/40 md:hover:shadow-2xl md:hover:-translate-y-1.5 group"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-brand-gold/[0.02] via-transparent to-transparent opacity-0 md:group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
               
@@ -213,11 +208,11 @@ export default function VipRealEstatePage({ params }: VipRealEstatePageProps) {
                   </div>
                 </div>
                 
-                <h3 className="text-xl font-black text-brand-navy-dark mb-3 md:group-hover:text-brand-gold transition-colors duration-300">
+                <h3 className="text-xl font-black text-brand-navy-dark mb-3 group-hover:text-brand-gold transition-colors duration-300 text-start w-full rtl:text-right ltr:text-left">
                   {step.title}
                 </h3>
                 
-                <p className="text-xs md:text-sm leading-relaxed font-medium text-brand-navy-light/70">
+                <p className="text-xs md:text-sm leading-relaxed font-medium text-brand-navy-light/70 text-start w-full rtl:text-right ltr:text-left">
                   {step.desc}
                 </p>
               </div>
@@ -226,18 +221,17 @@ export default function VipRealEstatePage({ params }: VipRealEstatePageProps) {
         </div>
       </section>
 
-      {/* 📊 [Section 4]: لوحة الأداء وتشغيل المحافظ العقارية - واضحة ونظيفة مفرودة بالكامل */}
       <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 relative z-10">
-        <div className="bg-white border border-brand-navy-dark/[0.04] rounded-[2.5rem] p-8 md:p-14 shadow-sm relative overflow-hidden w-full">
+        <div className="bg-white border border-brand-navy-dark/[0.04] rounded-[2.5rem] p-8 md:p-14 shadow-3xs relative overflow-hidden w-full">
           <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand-gold via-brand-gold-hover to-brand-gold" />
           
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12 text-center md:text-start">
-            <div className="space-y-1.5 flex flex-col items-center md:items-start">
-              <h3 className="text-xl md:text-3xl font-black text-brand-navy-dark flex items-center gap-2.5">
-                <ShieldCheck size={28} className="text-brand-gold" />
-                {t.techSpecsTitle}
+            <div className="space-y-1.5 flex flex-col items-center md:items-start text-center md:text-start w-full">
+              <h3 className="text-xl md:text-3xl font-black text-brand-navy-dark flex items-center justify-center md:justify-start gap-2.5 w-full rtl:text-right ltr:text-left">
+                <ShieldCheck size={28} className="text-brand-gold shrink-0" />
+                <span>{t.techSpecsTitle}</span>
               </h3>
-              <p className="text-[10px] tracking-widest uppercase font-bold text-brand-navy-light/40">{t.frameworkLabel}</p>
+              <p className="text-[10px] tracking-widest uppercase font-bold text-brand-navy-light/40 w-full rtl:text-right ltr:text-left">{t.frameworkLabel}</p>
             </div>
             <div className="flex items-center gap-2.5 bg-emerald-50 px-4.5 py-2.5 rounded-full border border-emerald-100/60 shrink-0">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -247,11 +241,11 @@ export default function VipRealEstatePage({ params }: VipRealEstatePageProps) {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
             {t.specs.map((spec, i) => (
-              <div key={i} className="bg-brand-light-bg/50 border border-brand-navy-dark/5 rounded-2xl p-6 flex flex-col gap-3 shadow-sm justify-between min-h-[130px] transition-all duration-300 md:hover:bg-white md:hover:border-brand-gold/30 md:hover:shadow-md group">
-                <span className="text-[10px] md:text-[11px] font-bold text-brand-navy-light/50 uppercase tracking-wider">
+              <div key={i} className="bg-brand-light-bg/50 border border-brand-navy-dark/5 rounded-2xl p-6 flex flex-col gap-3 shadow-3xs justify-between min-h-[130px] transition-all duration-300 md:hover:bg-white md:hover:border-brand-gold/30 md:hover:shadow-md group">
+                <span className="text-[10px] md:text-[11px] font-bold text-brand-navy-light/50 uppercase tracking-wider text-start w-full rtl:text-right ltr:text-left">
                   {spec.label}
                 </span>
-                <span className="font-bold text-sm text-brand-navy-dark flex items-center justify-between gap-1 pt-2">
+                <span className="font-bold text-sm text-brand-navy-dark flex items-center justify-between gap-1 pt-2 w-full rtl:text-right ltr:text-left">
                   {spec.value}
                   <ArrowUpRight size={14} className="text-brand-gold opacity-0 md:group-hover:opacity-100 md:group-hover:translate-x-0.5 md:group-hover:-translate-y-0.5 transition-all duration-300" />
                 </span>
@@ -260,21 +254,6 @@ export default function VipRealEstatePage({ params }: VipRealEstatePageProps) {
           </div>
         </div>
       </section>
-
-      {/* 🎬 مؤثرات الأنيميشن المعزولة */}
-      <style jsx global>{`
-        @keyframes gridSmoothMove {
-          from { background-position: 0 0; }
-          to { background-position: 60px 60px; }
-        }
-        @keyframes fadeInUpCoreNode {
-          from { opacity: 0; transform: translateY(24px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeInUp {
-          animation: fadeInUpCoreNode 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-      `}</style>
     </div>
   );
 }
